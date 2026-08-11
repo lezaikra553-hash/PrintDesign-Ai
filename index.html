@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintDesign AI Pro V7</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#070d1c">
+<link rel="apple-touch-icon" href="icon-192.svg">
+<style>
+:root{
+ --bg:#070d1c;--panel:#0b1327;--line:#22304f;--text:#f5f7fb;--muted:#9aa7bd;
+ --accent:#ffb11b;--accent2:#ff7a00;--good:#2dd4bf;--warn:#fbbf24;--bad:#fb7185;--info:#60a5fa
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#060b18,#081126 36%,#050a14);color:var(--text);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
+.app{max-width:1260px;margin:auto;padding:20px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:14px}.logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--accent2),#ffd044);display:grid;place-items:center;color:#111827;font-weight:900;font-size:28px}
+h1{margin:0;font-size:28px}.sub{color:var(--muted);font-size:13px;margin-top:3px}.badge{border:1px solid #735521;background:#1b160c;color:#ffd46b;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}.card{background:rgba(11,19,39,.92);border:1px solid #1d2a46;border-radius:18px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.title{font-size:17px;font-weight:850;color:#ffc24b;margin-bottom:14px;display:flex;gap:9px;align-items:center}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:7px}.full{grid-column:1/-1}
+label{font-size:12px;color:#c6d0df;font-weight:700}input,select,textarea{width:100%;background:#070d1c;color:#fff;border:1px solid #283654;border-radius:11px;padding:11px 12px;outline:none}
+button{border:1px solid var(--line);background:#121e35;color:#e9eef9;border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}button:hover{filter:brightness(1.08)}button:disabled{opacity:.42;cursor:not-allowed}
+.primary{background:linear-gradient(135deg,#ff9c12,#ffbd22);color:#111827;border:0}.success{background:linear-gradient(135deg,#12b981,#35d6a8);color:#07120e;border:0}.danger{background:#341018;border-color:#6a2b39}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}.small{font-size:11px;color:var(--muted);line-height:1.5}.note{margin-top:12px;padding:11px 12px;border:1px solid #254a70;background:#081522;border-radius:11px;color:#bddbff;font-size:11px;line-height:1.5}
+.status{margin-top:12px;padding:12px;border-radius:12px;border:1px solid #27415d;background:#091522}.status.good{border-color:#1d5b55}.status.warn{border-color:#5c4b20}.status.bad{border-color:#67303e}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.metric{border:1px solid #22304f;background:#09101f;border-radius:12px;padding:10px}.metric .k{font-size:10px;color:#8491a8;text-transform:uppercase}.metric .v{font-size:16px;font-weight:850;margin-top:4px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-top:14px}.item{background:#070d1c;border:1px solid #273855;border-radius:12px;padding:8px;cursor:pointer;position:relative}.item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,177,27,.12)}.item img{width:100%;height:115px;object-fit:contain;background:#fff;border-radius:8px}.item .n{font-size:11px;font-weight:800;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item .d{font-size:10px;color:var(--muted);margin-top:2px}.tag{position:absolute;top:12px;left:12px;background:var(--accent);color:#101725;font-size:9px;font-weight:900;padding:3px 6px;border-radius:999px}.overlay-item img{object-fit:contain;background:linear-gradient(45deg,#e5e7eb 25%,#fff 25%,#fff 75%,#e5e7eb 75%) 0 0/16px 16px}.overlay-item.active{border-color:#2dd4bf;box-shadow:0 0 0 2px rgba(45,212,191,.15)}
+.selection-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 14px;padding:10px 12px;background:#09111f;border:1px solid #263654;border-radius:12px}
+.selection-count{font-size:12px;color:#b8c5d8}
+.bulk-selected-panel{margin:12px 0;padding:12px;background:#0a1425;border:1px solid #29415f;border-radius:12px}
+.multi-preview{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.preview-card{background:#08101f;border:1px solid #243655;border-radius:14px;padding:10px;cursor:pointer;position:relative}
+.preview-check{position:absolute;top:8px;right:8px;z-index:5;width:25px;height:25px;accent-color:#2dd4bf;cursor:pointer}
+.preview-card.selected{border-color:#2dd4bf;box-shadow:0 0 0 2px rgba(45,212,191,.13)}.preview-card.active{border-color:#ffb11b;box-shadow:0 0 0 2px rgba(255,177,27,.12)}.preview-card .label{font-size:11px;font-weight:800;margin-bottom:7px;color:#dce6f5}.preview-stage{position:relative;display:inline-block;width:100%;background:#fff;border-radius:8px;overflow:visible}.preview-stage canvas{display:block;width:100%;height:auto;background:#fff;border-radius:8px}.previewbox{min-height:420px;border:1px solid #1f2d49;border-radius:14px;background:
+linear-gradient(45deg,#0a1020 25%,transparent 25%) 0 0/28px 28px,
+linear-gradient(45deg,transparent 75%,#0a1020 75%) 0 0/28px 28px,
+linear-gradient(45deg,transparent 75%,#0a1020 75%) 14px -14px/28px 28px,
+linear-gradient(45deg,#0a1020 25%,#080d19 25%) 14px -14px/28px 28px;
+display:grid;place-items:center;padding:14px;overflow:auto}
+#preview{max-width:100%;max-height:390px;background:#fff;box-shadow:0 15px 40px rgba(0,0,0,.35)}
+.list{margin-top:10px}.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #17243b;padding:10px 0;font-size:12px}.row:last-child{border-bottom:0}.row span:first-child{color:#9aa7bd}.row b{text-align:right}
+.progress{height:8px;background:#111a2f;border-radius:99px;overflow:hidden;margin-top:10px;display:none}.progress>div{height:100%;width:0;background:linear-gradient(90deg,#ff9c12,#ffd34c);transition:width .2s}
+.hidden{display:none!important}
+.mode-banner{padding:12px 14px;border-radius:12px;background:#10182d;border:1px solid #263654;margin-bottom:14px}.mode-banner b{color:#ffd166}
+.overlay-handle{position:absolute;border:2px solid #ffb11b;box-shadow:0 0 0 1px rgba(0,0,0,.55);cursor:move;touch-action:none;transform-origin:center center}
+.overlay-handle img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.resize-dot{position:absolute;width:18px;height:18px;border-radius:50%;background:#ffb11b;border:2px solid #101725;right:-10px;bottom:-10px;cursor:nwse-resize;touch-action:none}
+.rotate-dot{position:absolute;width:22px;height:22px;border-radius:50%;background:#60a5fa;border:2px solid #101725;left:50%;top:-36px;transform:translateX(-50%);cursor:grab;touch-action:none;display:grid;place-items:center;font-size:13px;color:#07111f;font-weight:900}
+.rotate-dot:after{content:"↻"}
+.rotate-line{position:absolute;width:2px;height:18px;background:#60a5fa;left:50%;top:-18px;transform:translateX(-50%);pointer-events:none}
+
+.editor-modal{position:fixed;inset:0;background:rgba(2,6,15,.96);z-index:9999;padding:10px;overflow:auto}
+.editor-shell{max-width:850px;margin:auto;min-height:100%;display:flex;flex-direction:column;gap:10px}
+.editor-topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0b1327;border:1px solid #263654;border-radius:14px;padding:12px}
+.editor-canvas-wrap{flex:1;min-height:52vh;display:grid;place-items:center;background:#050a14;border:1px solid #25334d;border-radius:14px;padding:10px;overflow:auto}
+.editor-stage{position:relative;display:inline-block;max-width:100%;touch-action:none}
+#editorCanvas{display:block;max-width:100%;max-height:62vh;background:#fff;border-radius:8px}
+.editor-overlay{position:absolute;border:3px solid #ffb11b;box-shadow:0 0 0 1px rgba(0,0,0,.7);cursor:move;touch-action:none;transform-origin:center center}
+.editor-overlay img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.corner{position:absolute;width:28px;height:28px;border-radius:50%;background:#ffb11b;border:3px solid #101725;touch-action:none}
+.corner.tl{left:-15px;top:-15px;cursor:nwse-resize}.corner.tr{right:-15px;top:-15px;cursor:nesw-resize}.corner.bl{left:-15px;bottom:-15px;cursor:nesw-resize}.corner.br{right:-15px;bottom:-15px;cursor:nwse-resize}
+.editor-rotate{position:absolute;width:34px;height:34px;border-radius:50%;background:#60a5fa;border:3px solid #101725;color:#08111f;font-size:22px;font-weight:900;display:grid;place-items:center;left:50%;top:-48px;transform:translateX(-50%);cursor:grab;touch-action:none}
+.editor-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ctrl-group{background:#0b1327;border:1px solid #263654;border-radius:14px;padding:10px}.ctrl-title{font-size:11px;color:#9eb0c8;font-weight:800;margin-bottom:8px}
+.nudge-grid{display:grid;grid-template-columns:repeat(3,44px);gap:5px;justify-content:center}.nudge-grid button{padding:8px;font-size:18px}
+.quick-buttons{display:flex;flex-wrap:wrap;gap:6px}.quick-buttons button{flex:1;min-width:75px}
+.editor-help{background:#10182d;border:1px solid #2b3c5b;border-radius:12px;padding:10px;color:#c7d3e5;font-size:11px;line-height:1.5;text-align:center}
+@media(max-width:650px){.editor-controls{grid-template-columns:1fr}.editor-canvas-wrap{min-height:48vh}.corner{width:32px;height:32px}.editor-rotate{width:38px;height:38px;top:-52px}.editor-topbar button{padding:9px 11px}}
+
+.history-item{border:1px solid #263654;background:#09111f;border-radius:12px;padding:12px;margin-bottom:10px}
+.history-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.history-name{font-weight:850;color:#fff}.history-meta{font-size:10px;color:#91a0b7;margin-top:4px}.history-note{font-size:11px;color:#bdc8d8;margin-top:7px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}@media(max-width:560px){.app{padding:12px}.form-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.badge{display:none}h1{font-size:23px}.logo{width:48px;height:48px}}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="top">
+  <div class="brand"><div class="logo">✦</div><div><h1>PrintDesign AI Pro</h1><div class="sub">Advertising File Extractor • Auto Prepress • Ready-to-Print Engine</div></div></div>
+  <div class="badge">v7.0 HISTORY • DRIVE • PWA</div>
+ </div>
+
+ <div class="card" style="margin-bottom:18px">
+   <div class="actions" style="margin-top:0">
+     <button class="primary" onclick="openProjectModal()">💾 SIMPAN PROJECT</button>
+     <button onclick="openHistoryModal()">🕘 RIWAYAT FILE</button>
+     <button onclick="openDriveModal()">☁ GOOGLE DRIVE</button>
+     <button onclick="installPWA()" id="installBtn">📱 BUAT PINTASAN HP</button>
+   </div>
+   <div class="small" style="margin-top:8px">Project dapat disimpan/edit/hapus di perangkat. Google Drive tersedia setelah Client ID Google dikonfigurasi dan aplikasi di-host lewat HTTPS.</div>
+ </div>
+
+ <div class="grid">
+  <div>
+   <div class="card">
+    <div class="title">📂 1. IMPORT FILE / GAMBAR</div>
+    <div class="form-grid">
+      <div class="field"><label>Import PDF Desain</label><input id="pdfFile" type="file" accept="application/pdf"></div>
+      <div class="field"><label>Tambah Gambar / Logo Overlay</label><input id="imageFiles" type="file" accept="image/*" multiple></div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="readPdfBtn" onclick="readPdf()" disabled>🔍 BACA & PISAHKAN PDF</button>
+      <button onclick="clearAll()">Hapus Semua</button>
+    </div>
+    <div class="progress" id="progress"><div></div></div>
+    <div id="importStatus" class="status"><div class="small">PDF akan dipisahkan menjadi desain satuan. Gambar/logo tambahan akan masuk ke panel Overlay dan ditampilkan di preview.</div></div>
+
+    <div id="overlayImportArea" style="margin-top:16px">
+      <div class="small" style="font-weight:800;color:#dbe6f5">Gambar / Logo Tambahan</div>
+      <div id="overlayGallery" class="gallery"></div>
+    </div>
+   </div>
+
+   <div class="card" style="margin-top:18px">
+    <div class="title">🧩 2. HASIL DETEKSI & PEMISAHAN</div>
+    <div class="mode-banner" id="modeInfo">Mode: <b>Belum ada file</b></div>
+    <div class="metrics">
+      <div class="metric"><div class="k">Desain Terdeteksi</div><div class="v" id="countDesign">0</div></div>
+      <div class="metric"><div class="k">Asset Tambahan</div><div class="v" id="countExtra">0</div></div>
+      <div class="metric"><div class="k">Status</div><div class="v" id="detectStatus">—</div></div>
+    </div>
+    <div id="gallery" class="gallery"></div>
+    <div class="actions">
+      <button class="success" id="upscaleAllBtn" onclick="upscaleAll()" disabled>⬆ PERBESAR RESOLUSI SEMUA</button><button class="success" id="prepareAllBtn" onclick="prepareAll()" disabled>✓ SIAPKAN SEMUA FILE</button>
+      <button id="zipBtn" onclick="downloadZip()" disabled>⬇ Download Semua ZIP</button>
+    </div>
+   </div>
+
+   <div class="card" style="margin-top:18px">
+    <div class="title">🎯 3. LOGO / GAMBAR TAMBAHAN</div>
+    <div class="mode-banner">Pilih overlay di sini, lalu <b>geser dan ubah ukuran langsung di Preview Desain Terpilih</b>. Posisi yang Anda atur diterapkan sama ke semua desain.</div>
+    <div class="form-grid">
+      <div class="field"><label>Overlay Aktif</label><select id="overlaySelect"><option value="">Belum ada overlay</option></select></div>
+      <div class="field"><label>Anchor / Patokan</label><select id="overlayAnchor">
+        <option value="custom">Custom</option>
+        <option value="top-left">Kiri Atas</option>
+        <option value="top-right">Kanan Atas</option>
+        <option value="bottom-left">Kiri Bawah</option>
+        <option value="bottom-right">Kanan Bawah</option>
+        <option value="center">Tengah</option>
+      </select></div>
+      <input id="overlayX" type="hidden" value="5">
+      <input id="overlayY" type="hidden" value="5">
+      <input id="overlayW" type="hidden" value="12">
+      <div class="field"><label>Rotasi (°)</label><input id="overlayRot" type="range" min="-180" max="180" step="1" value="0"></div>
+      <div class="field"><label>Transparansi (%)</label><input id="overlayOpacity" type="range" min="10" max="100" step="1" value="100"></div>
+      <div class="field"><label>Margin dari tepi (%)</label><input id="overlayMargin" type="range" min="0" max="15" step="0.1" value="2"></div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="applyAnchor()">Terapkan Anchor</button>
+      <button onclick="resetOverlay()">Reset Posisi</button>
+    </div>
+    <div class="small" id="overlayInfo" style="margin-top:10px">Belum ada overlay aktif.</div>
+   </div>
+
+   <div class="card" style="margin-top:18px">
+    <div class="title">📐 4. TARGET CETAK</div>
+    <div class="form-grid">
+      <div class="field"><label>Jenis Produk</label><select id="product">
+        <optgroup label="Percetakan Offset">
+          <option value="business-card">Kartu Nama</option>
+          <option value="flyer">Flyer / Brosur</option>
+          <option value="catalog">Katalog / Company Profile</option>
+          <option value="booklet">Booklet / Buku</option>
+          <option value="calendar">Kalender</option>
+          <option value="packaging">Packaging / Box</option>
+          <option value="label">Label / Sticker Sheet</option>
+        </optgroup>
+        <optgroup label="Digital Printing">
+          <option value="sticker">Sticker / Vinyl</option>
+          <option value="banner">Banner / Spanduk</option>
+          <option value="backdrop">Backdrop</option>
+          <option value="x-banner">X-Banner / Roll Banner</option>
+          <option value="poster">Poster</option>
+          <option value="canvas">Canvas Print</option>
+          <option value="wallpaper">Wallpaper / Wall Graphic</option>
+          <option value="vehicle">Branding Kendaraan</option>
+        </optgroup>
+        <optgroup label="Advertising & Signage">
+          <option value="signage">Signage / Papan Nama</option>
+          <option value="safety-sign" selected>Safety Sign / Industrial Sign</option>
+          <option value="huruf-timbul">Huruf Timbul</option>
+          <option value="neonbox">Neon Box / Lightbox</option>
+          <option value="billboard">Billboard / Baliho</option>
+          <option value="totem">Totem / Pylon Sign</option>
+          <option value="wayfinding">Wayfinding / Direction Sign</option>
+          <option value="nameplate">Nameplate / Plaque</option>
+        </optgroup>
+        <optgroup label="Etching / Industrial Marking">
+          <option value="etching-ss">Etching Stainless</option>
+          <option value="etching-alu">Etching Aluminium</option>
+          <option value="anodized">Anodized Nameplate</option>
+          <option value="panel-label">Panel / Control Label</option>
+          <option value="asset-tag">Asset Tag / Equipment Tag</option>
+        </optgroup>
+        <optgroup label="Lainnya">
+          <option value="custom">Custom / Kebutuhan Lain</option>
+        </optgroup>
+      </select></div>
+      <div class="field"><label>Mode Kualitas</label><select id="qualityMode"><option value="max">Maksimal / Otomatis</option><option value="manual">Manual</option></select></div><div class="field full hidden" id="customProductWrap"><label>Nama Produk / Pekerjaan Custom</label><input id="customProduct" placeholder="Contoh: Panel Acrylic UV Print, Label Mesin, Display Counter"></div>
+      <div class="field"><label>Lebar Final</label><input id="width" type="number" step="0.1" value="35"></div>
+      <div class="field"><label>Tinggi Final</label><input id="height" type="number" step="0.1" value="45"></div>
+      <div class="field"><label>Satuan</label><select id="unit"><option value="cm">cm</option><option value="mm">mm</option><option value="m">meter</option></select></div>
+      <div class="field"><label>Target PPI Manual</label><input id="manualPpi" type="number" value="300" disabled></div>
+    </div>
+    <div class="note">Jenis pekerjaan mencakup offset, digital printing, advertising, signage, etching dan industrial marking. Ukuran target digunakan untuk menghitung kebutuhan resolusi. Tombol <b>PERBESAR RESOLUSI</b> hanya meningkatkan pixel secara proporsional. Tombol <b>SIAPKAN FILE</b> hanya menerapkan overlay/finalisasi tanpa memperbesar resolusi.</div>
+   </div>
+
+   <div id="contentDesignCard" class="card hidden" style="margin-top:18px">
+    <div class="title">✨ 5. BUAT DESAIN DARI NOL</div>
+    <div class="small">Bagian ini hanya muncul bila tidak ada file/desain yang diupload. Jika file sudah ada, aplikasi masuk <b>File Ready Mode</b> dan fokus memperbaiki file agar siap cetak tanpa mengubah desain.</div>
+   </div>
+  </div>
+
+  <div>
+   <div class="card">
+    <div class="title">👁 PREVIEW SEMUA DESAIN</div>
+    <div class="mode-banner">Semua desain hasil ekstraksi ditampilkan sekaligus. <b>Centang file</b> yang ingin diproses bersamaan. Klik desain untuk menjadikannya desain aktif.</div>
+    <div class="selection-toolbar">
+      <div class="selection-count">Dipilih: <b id="selectedCount">0</b> file</div>
+      <div class="actions" style="margin-top:0">
+        <button onclick="selectAllDesigns()">☑ Pilih Semua</button>
+        <button onclick="clearSelection()">☐ Batal Semua</button>
+      </div>
+    </div>
+    <div id="multiPreview" class="multi-preview"></div>
+    <div class="bulk-selected-panel">
+      <div class="small" style="font-weight:850;color:#dce6f5;margin-bottom:8px">PROSES FILE TERPILIH</div>
+      <div class="actions" style="margin-top:0">
+        <button class="success" id="repairSelectedBtn" onclick="repairSelectedFiles()" disabled>✦ PERBAIKI KUALITAS</button>
+        <button class="success" id="upscaleSelectedBtn" onclick="upscaleSelectedFiles()" disabled>⬆ PERBESAR RESOLUSI</button>
+        <button class="success" id="prepareSelectedBtn" onclick="prepareSelectedFiles()" disabled>✓ SIAPKAN FILE</button>
+        <button id="downloadSelectedZipBtn" onclick="downloadSelectedZip()" disabled>⬇ DOWNLOAD TERPILIH (ZIP)</button>
+      </div>
+      <div class="small" style="margin-top:8px">Semua proses hanya berlaku pada file yang dicentang.</div>
+    </div>
+    <div class="note">Pada desain aktif: <b>geser logo</b> untuk posisi, tarik <b>titik kuning</b> untuk ukuran, dan tarik <b>titik biru ↻</b> untuk rotasi. Saat file diproses, <b>rasio, komposisi, posisi logo, dan isi desain tidak akan diubah</b>.</div>
+    <div class="actions">
+      <button class="primary" id="editLogoBtn" onclick="openLogoEditor()" disabled>✥ ATUR LOGO / GAMBAR</button>
+      <button class="success" id="upscaleOneBtn" onclick="upscaleSelected()" disabled>⬆ PERBESAR RESOLUSI</button>
+      <button class="success" id="prepareOneBtn" onclick="prepareSelected()" disabled>✓ SIAPKAN FILE</button>
+      <button id="downloadOneBtn" onclick="downloadSelected()" disabled>⬇ Download File Aktif</button>
+    </div>
+   </div>
+
+   <div class="card" style="margin-top:18px">
+    <div class="title">✅ PREFLIGHT OTOMATIS</div>
+    <div class="list">
+      <div class="row"><span>Nama file</span><b id="rName">—</b></div>
+      <div class="row"><span>Resolusi sumber</span><b id="rSource">—</b></div>
+      <div class="row"><span>Target cetak</span><b id="rTarget">—</b></div>
+      <div class="row"><span>Target PPI</span><b id="rPpi">—</b></div>
+      <div class="row"><span>Pixel minimum</span><b id="rPixel">—</b></div>
+      <div class="row"><span>Upscale dibutuhkan</span><b id="rUpscale">—</b></div>
+      <div class="row"><span>Status kualitas</span><b id="rQuality">—</b></div>
+      <div class="row"><span>Status resolusi</span><b id="rUpscaleStatus">—</b></div>
+      <div class="row"><span>Status file</span><b id="rReady">—</b></div>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div id="logoEditorModal" class="editor-modal hidden">
+  <div class="editor-shell">
+    <div class="editor-topbar">
+      <div>
+        <b>ATUR LOGO / GAMBAR</b>
+        <div class="small">Atur sekali, berlaku sama untuk semua desain.</div>
+      </div>
+      <button onclick="closeLogoEditor()">SELESAI</button>
+    </div>
+
+    <div class="editor-canvas-wrap">
+      <div id="editorStage" class="editor-stage">
+        <canvas id="editorCanvas"></canvas>
+        <div id="editorOverlay" class="editor-overlay hidden">
+          <img id="editorOverlayImg">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+          <span class="editor-rotate" title="Putar">↻</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-title">POSISI</div>
+        <div class="nudge-grid">
+          <span></span><button onclick="nudgeOverlay(0,-1)">▲</button><span></span>
+          <button onclick="nudgeOverlay(-1,0)">◀</button><button onclick="centerOverlay()">●</button><button onclick="nudgeOverlay(1,0)">▶</button>
+          <span></span><button onclick="nudgeOverlay(0,1)">▼</button><span></span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-title">UKURAN</div>
+        <div class="quick-buttons">
+          <button onclick="scaleOverlay(-5)">− Kecil</button>
+          <button onclick="scaleOverlay(5)">+ Besar</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-title">ROTASI</div>
+        <div class="quick-buttons">
+          <button onclick="rotateOverlay(-5)">↺ 5°</button>
+          <button onclick="rotateOverlay(5)">↻ 5°</button>
+          <button onclick="setRotation(0)">0°</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-help">Geser logo langsung dengan jari. Tarik <b>sudut mana saja</b> untuk memperbesar/perkecil. Tarik tombol <b>↻</b> untuk memutar.</div>
+  </div>
+</div>
+
+
+<div id="projectModal" class="editor-modal hidden">
+ <div class="editor-shell" style="max-width:520px;min-height:auto;margin-top:8vh">
+  <div class="editor-topbar"><b>SIMPAN PROJECT</b><button onclick="closeModal('projectModal')">TUTUP</button></div>
+  <div class="card">
+    <div class="field"><label>Nama Project</label><input id="projectName" placeholder="Contoh: Safety Sign GWDC"></div>
+    <div class="field" style="margin-top:10px"><label>Catatan</label><textarea id="projectNote" rows="3" placeholder="Keterangan project"></textarea></div>
+    <div class="actions"><button class="success" onclick="saveProjectHistory()">SIMPAN</button></div>
+  </div>
+ </div>
+</div>
+
+<div id="historyModal" class="editor-modal hidden">
+ <div class="editor-shell" style="max-width:760px;min-height:auto;margin-top:4vh">
+  <div class="editor-topbar"><div><b>RIWAYAT FILE / PROJECT</b><div class="small">Buka, edit nama/catatan, atau hapus.</div></div><button onclick="closeModal('historyModal')">TUTUP</button></div>
+  <div class="card"><div id="historyList"></div></div>
+ </div>
+</div>
+
+<div id="driveModal" class="editor-modal hidden">
+ <div class="editor-shell" style="max-width:620px;min-height:auto;margin-top:6vh">
+  <div class="editor-topbar"><div><b>GOOGLE DRIVE</b><div class="small">Backup/restore project.</div></div><button onclick="closeModal('driveModal')">TUTUP</button></div>
+  <div class="card">
+    <div class="field"><label>Google OAuth Client ID</label><input id="googleClientId" placeholder="xxxxxxxx.apps.googleusercontent.com"></div>
+    <div class="actions">
+      <button class="primary" onclick="saveDriveConfig()">Simpan Konfigurasi</button>
+      <button onclick="driveSignIn()">Login Google</button>
+      <button class="success" onclick="backupHistoryToDrive()">Backup Riwayat ke Drive</button>
+      <button onclick="restoreHistoryFromDrive()">Restore dari Drive</button>
+    </div>
+    <div id="driveStatus" class="note">Untuk keamanan OAuth, fitur Drive harus dijalankan dari alamat HTTPS (misalnya Vercel), bukan file HTML lokal.</div>
+  </div>
+ </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+let pdfFile=null, designs=[], extras=[], selectedId=null, zipBlob=null, overlays=[], activeOverlayId=null, selectedDesignIds=new Set();
+const rules={
+ "business-card":{ppi:300},"flyer":{ppi:300},"catalog":{ppi:300},"booklet":{ppi:300},"calendar":{ppi:300},
+ "packaging":{ppi:300},"label":{ppi:300},"sticker":{ppi:300},"banner":{ppi:150},"backdrop":{ppi:120},
+ "x-banner":{ppi:180},"poster":{ppi:240},"canvas":{ppi:200},"wallpaper":{ppi:120},"vehicle":{ppi:180},
+ "signage":{ppi:240},"safety-sign":{ppi:300},"huruf-timbul":{ppi:240},"neonbox":{ppi:180},"billboard":{ppi:72},
+ "totem":{ppi:120},"wayfinding":{ppi:240},"nameplate":{ppi:300},"etching-ss":{ppi:300},"etching-alu":{ppi:300},
+ "anodized":{ppi:300},"panel-label":{ppi:300},"asset-tag":{ppi:300},"custom":{ppi:300}
+};
+
+$("pdfFile").addEventListener("change",e=>{pdfFile=e.target.files[0]||null;$("readPdfBtn").disabled=!pdfFile;if(pdfFile){$("importStatus").className="status";$("importStatus").innerHTML=`<b>PDF dipilih:</b> ${esc(pdfFile.name)}<div class="small">Klik “BACA & PISAHKAN PDF”.</div>`}});
+$("imageFiles").addEventListener("change",e=>{[...e.target.files].forEach(addOverlayImage);e.target.value=""});
+$("qualityMode").addEventListener("change",()=>{$("manualPpi").disabled=$("qualityMode").value!=="manual";refreshSelected()});
+$("overlaySelect").addEventListener("change",()=>{activeOverlayId=$("overlaySelect").value||null;invalidateProcessed();renderOverlayGallery();refreshSelected();renderAllPreviews()});
+["overlayRot","overlayOpacity","overlayMargin"].forEach(id=>{$(id).addEventListener("input",()=>{invalidateProcessed();updateOverlayInfo();refreshSelected();renderAllPreviews()})});
+
+["product","width","height","unit","manualPpi"].forEach(id=>{$(id).addEventListener("input",refreshSelected);$(id).addEventListener("change",refreshSelected)});
+$("product").addEventListener("change",()=>{$("customProductWrap").classList.toggle("hidden",$("product").value!=="custom")});
+
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function setProgress(v){let p=$("progress");p.style.display="block";p.firstElementChild.style.width=v+"%";if(v>=100)setTimeout(()=>p.style.display="none",700)}
+function toCm(v,u){v=Number(v)||0;return u==="mm"?v/10:u==="m"?v*100:v}
+function targetPpi(){return $("qualityMode").value==="manual"?(Number($("manualPpi").value)||300):(rules[$("product").value]?.ppi||300)}
+function targetPx(){let w=toCm($("width").value,$("unit").value),h=toCm($("height").value,$("unit").value),ppi=targetPpi();return {w:Math.round(w/2.54*ppi),h:Math.round(h/2.54*ppi),ppi}}
+function addOverlayImage(file){
+ const img=new Image();
+ img.onload=()=>{
+   const ov={id:"ov-"+crypto.randomUUID(),name:file.name,img,w:img.naturalWidth,h:img.naturalHeight};
+   overlays.push(ov);
+   if(!activeOverlayId) activeOverlayId=ov.id;
+   invalidateProcessed();renderOverlayGallery();refreshOverlaySelect();refreshSelected();
+ };
+ img.src=URL.createObjectURL(file)
+}
+
+
+
+function invalidateProcessed(){
+ designs.forEach(d=>{d.processed=null;d.processedCanvas=null});
+ zipBlob=null;$("zipBtn").disabled=true;updateUI()
+}
+
+function renderOverlayGallery(){
+ const g=$("overlayGallery"); if(!g) return;
+ g.innerHTML="";
+ overlays.forEach((o,i)=>{
+   const div=document.createElement("div");
+   div.className="item overlay-item"+(o.id===activeOverlayId?" active":"");
+   div.onclick=()=>{activeOverlayId=o.id;refreshOverlaySelect();renderOverlayGallery();refreshSelected()};
+   const im=document.createElement("img");im.src=o.img.src;div.appendChild(im);
+   if(o.id===activeOverlayId){const tag=document.createElement("div");tag.className="tag";tag.textContent="AKTIF";div.appendChild(tag)}
+   const n=document.createElement("div");n.className="n";n.textContent=o.name;div.appendChild(n);
+   const d=document.createElement("div");d.className="d";d.textContent=`${o.w} × ${o.h}px`;div.appendChild(d);
+   g.appendChild(div);
+ })
+}
+function refreshOverlaySelect(){
+ const s=$("overlaySelect"); if(!s) return;
+ s.innerHTML='<option value="">Tanpa overlay</option>';
+ overlays.forEach(o=>{const op=document.createElement("option");op.value=o.id;op.textContent=o.name;s.appendChild(op)});
+ s.value=activeOverlayId||"";
+ updateOverlayInfo();
+}
+function activeOverlay(){return overlays.find(o=>o.id===activeOverlayId)||null}
+function overlaySettings(){
+ return {
+   x:Number($("overlayX").value)/100,
+   y:Number($("overlayY").value)/100,
+   w:Number($("overlayW").value)/100,
+   rot:Number($("overlayRot").value||0),
+   opacity:Number($("overlayOpacity").value||100)/100,
+   margin:Number($("overlayMargin").value||0)/100
+ }
+}
+function applyAnchor(){
+ const a=$("overlayAnchor").value,m=Number($("overlayMargin").value||0);
+ const w=Number($("overlayW").value||12);
+ if(a==="top-left"){$("overlayX").value=m;$("overlayY").value=m}
+ if(a==="top-right"){$("overlayX").value=Math.max(0,100-m-w);$("overlayY").value=m}
+ if(a==="bottom-left"){$("overlayX").value=m;$("overlayY").value=Math.max(0,100-m-w)}
+ if(a==="bottom-right"){$("overlayX").value=Math.max(0,100-m-w);$("overlayY").value=Math.max(0,100-m-w)}
+ if(a==="center"){$("overlayX").value=(100-w)/2;$("overlayY").value=(100-w)/2}
+ invalidateProcessed();refreshSelected();updateOverlayHandle()
+}
+function resetOverlay(){
+ $("overlayX").value=5;$("overlayY").value=5;$("overlayW").value=12;$("overlayRot").value=0;$("overlayOpacity").value=100;$("overlayMargin").value=2;$("overlayAnchor").value="custom";invalidateProcessed();refreshSelected();updateOverlayHandle()
+}
+function updateOverlayInfo(){
+ const o=activeOverlay(),el=$("overlayInfo"); if(!el) return;
+ if(!o){el.textContent="Belum ada overlay aktif.";if($("editLogoBtn"))$("editLogoBtn").disabled=true;return}
+ if($("editLogoBtn")&&selectedId)$("editLogoBtn").disabled=false;
+ const s=overlaySettings();
+ el.textContent=`Aktif: ${o.name} • X ${(s.x*100).toFixed(1)}% • Y ${(s.y*100).toFixed(1)}% • Lebar ${(s.w*100).toFixed(1)}% • Rotasi ${s.rot}° • Opacity ${Math.round(s.opacity*100)}%`
+}
+function drawOverlay(ctx,W,H){
+ const o=activeOverlay(); if(!o) return;
+ const s=overlaySettings();
+ const dw=W*s.w, dh=dw*(o.h/o.w);
+ const cx=W*s.x+dw/2, cy=H*s.y+dh/2;
+ ctx.save();ctx.globalAlpha=s.opacity;ctx.translate(cx,cy);ctx.rotate(s.rot*Math.PI/180);
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(o.img,-dw/2,-dh/2,dw,dh);ctx.restore()
+}
+
+function updateOverlayHandle(){
+ const h=$("overlayHandle"),img=$("overlayHandleImg"),o=activeOverlay(),c=$("preview");
+ if(!o||!designs.length){h.classList.add("hidden");return}
+ h.classList.remove("hidden");img.src=o.img.src;
+ const s=overlaySettings(),dw=c.width*s.w,dh=dw*(o.h/o.w);
+ h.style.left=(c.width*s.x)+"px";h.style.top=(c.height*s.y)+"px";h.style.width=dw+"px";h.style.height=dh+"px";
+ h.style.opacity=s.opacity;h.style.transform=`rotate(${s.rot}deg)`;
+}
+;
+
+function getSelectedDesign(){return designs.find(d=>d.id===selectedId)||null}
+function openLogoEditor(){
+ const d=getSelectedDesign(),o=activeOverlay();if(!d||!o)return;
+ $("logoEditorModal").classList.remove("hidden");
+ renderLogoEditor();
+ document.body.style.overflow="hidden";
+}
+function closeLogoEditor(){
+ $("logoEditorModal").classList.add("hidden");
+ document.body.style.overflow="";
+ invalidateProcessed();renderAllPreviews();refreshSelected();
+}
+function renderLogoEditor(){
+ const d=getSelectedDesign(),o=activeOverlay();if(!d||!o)return;
+ const c=$("editorCanvas"),im=d.processed||d.upscaled||d.img,wrap=$("editorCanvas").parentElement;
+ const maxW=Math.min(window.innerWidth-40,760),maxH=Math.max(320,Math.min(window.innerHeight*.58,650));
+ let r=im.width/im.height,w=maxW,h=w/r;if(h>maxH){h=maxH;w=h*r}
+ c.width=Math.max(220,Math.round(w));c.height=Math.max(180,Math.round(h));
+ c.style.width=c.width+"px";c.style.height=c.height+"px";
+ const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(im,0,0,c.width,c.height);
+ const box=$("editorOverlay"),img=$("editorOverlayImg"),s=overlaySettings();
+ img.src=o.img.src;box.classList.remove("hidden");
+ const dw=c.width*s.w,dh=dw*(o.h/o.w);
+ box.style.left=(c.width*s.x)+"px";box.style.top=(c.height*s.y)+"px";box.style.width=dw+"px";box.style.height=dh+"px";box.style.opacity=s.opacity;box.style.transform=`rotate(${s.rot}deg)`;
+ bindEditorOverlay();
+}
+let editorBound=false;
+function bindEditorOverlay(){
+ if(editorBound)return;editorBound=true;
+ const box=$("editorOverlay");let mode=null,start=null,base={},center={};
+ const pt=e=>{const t=e.touches?e.touches[0]:e;return{x:t.clientX,y:t.clientY}};
+ function down(e){
+   if(e.target.classList.contains("editor-rotate"))return;
+   const corner=e.target.classList.contains("corner")?e.target:null;
+   e.preventDefault();e.stopPropagation();start=pt(e);
+   const c=$("editorCanvas");
+   base={left:parseFloat(box.style.left)||0,top:parseFloat(box.style.top)||0,w:parseFloat(box.style.width)||50,h:parseFloat(box.style.height)||50,ratio:(activeOverlay()?.w||1)/(activeOverlay()?.h||1)};
+   mode=corner?"resize":"move";
+ }
+ function rotDown(e){
+   e.preventDefault();e.stopPropagation();mode="rotate";start=pt(e);
+   const r=box.getBoundingClientRect();center={x:r.left+r.width/2,y:r.top+r.height/2};
+   base.rot=Number($("overlayRot").value)||0;base.startAngle=Math.atan2(start.y-center.y,start.x-center.x)*180/Math.PI;
+ }
+ function move(e){
+   if(!mode)return;e.preventDefault();const p=pt(e),c=$("editorCanvas");
+   if(mode==="move"){
+     let l=Math.max(0,Math.min(c.width-box.offsetWidth,base.left+(p.x-start.x)));
+     let t=Math.max(0,Math.min(c.height-box.offsetHeight,base.top+(p.y-start.y)));
+     $("overlayX").value=(l/c.width*100).toFixed(2);$("overlayY").value=(t/c.height*100).toFixed(2);
+   }else if(mode==="resize"){
+     let nw=Math.max(30,Math.min(c.width,base.w+(p.x-start.x)));
+     $("overlayW").value=(nw/c.width*100).toFixed(2);
+   }else{
+     let a=Math.atan2(p.y-center.y,p.x-center.x)*180/Math.PI;
+     let ang=base.rot+(a-base.startAngle);if(ang>180)ang-=360;if(ang<-180)ang+=360;$("overlayRot").value=Math.round(ang);
+   }
+   syncEditorBox();invalidateProcessed();updateOverlayInfo();
+ }
+ function up(){mode=null}
+ box.addEventListener("mousedown",down);box.addEventListener("touchstart",down,{passive:false});
+ box.querySelectorAll(".corner").forEach(x=>{x.addEventListener("mousedown",down);x.addEventListener("touchstart",down,{passive:false})});
+ box.querySelector(".editor-rotate").addEventListener("mousedown",rotDown);box.querySelector(".editor-rotate").addEventListener("touchstart",rotDown,{passive:false});
+ document.addEventListener("mousemove",move);document.addEventListener("touchmove",move,{passive:false});document.addEventListener("mouseup",up);document.addEventListener("touchend",up)
+}
+function syncEditorBox(){
+ const c=$("editorCanvas"),box=$("editorOverlay"),o=activeOverlay();if(!o)return;
+ const s=overlaySettings(),dw=c.width*s.w,dh=dw*(o.h/o.w);
+ box.style.left=(c.width*s.x)+"px";box.style.top=(c.height*s.y)+"px";box.style.width=dw+"px";box.style.height=dh+"px";box.style.opacity=s.opacity;box.style.transform=`rotate(${s.rot}deg)`
+}
+function nudgeOverlay(dx,dy){
+ const step=1;let x=Number($("overlayX").value)+dx*step,y=Number($("overlayY").value)+dy*step;
+ $("overlayX").value=Math.max(0,Math.min(100,x));$("overlayY").value=Math.max(0,Math.min(100,y));syncEditorBox();invalidateProcessed();updateOverlayInfo()
+}
+function centerOverlay(){
+ const w=Number($("overlayW").value);$("overlayX").value=(100-w)/2;
+ const o=activeOverlay(),c=$("editorCanvas");if(o&&c){const dh=(c.width*(w/100)*(o.h/o.w))/c.height*100;$("overlayY").value=(100-dh)/2}
+ syncEditorBox();invalidateProcessed();updateOverlayInfo()
+}
+function scaleOverlay(delta){
+ let w=Number($("overlayW").value)+delta;$("overlayW").value=Math.max(3,Math.min(80,w));syncEditorBox();invalidateProcessed();updateOverlayInfo()
+}
+function rotateOverlay(delta){
+ let a=Number($("overlayRot").value)+delta;if(a>180)a-=360;if(a<-180)a+=360;$("overlayRot").value=a;syncEditorBox();invalidateProcessed();updateOverlayInfo()
+}
+function setRotation(a){$("overlayRot").value=a;syncEditorBox();invalidateProcessed();updateOverlayInfo()}
+window.addEventListener("resize",()=>{if(!$("logoEditorModal").classList.contains("hidden"))renderLogoEditor()});
+
+async function readPdf(){
+ if(!pdfFile)return;
+ if(!window.pdfjsLib){$("importStatus").className="status bad";$("importStatus").innerHTML="<b>PDF engine belum termuat.</b><div class='small'>Perangkat perlu internet saat membuka aplikasi agar PDF.js termuat.</div>";return}
+ try{
+  setProgress(5);$("readPdfBtn").disabled=true;designs=[];extras=[];selectedId=null;zipBlob=null;
+  const data=await pdfFile.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data}).promise;
+  let found=[];
+  for(let pno=1;pno<=pdf.numPages;pno++){
+    const page=await pdf.getPage(pno);
+    // render once so page image objects are resolved
+    const vp=page.getViewport({scale:1.2});
+    const temp=document.createElement("canvas");temp.width=Math.round(vp.width);temp.height=Math.round(vp.height);
+    await page.render({canvasContext:temp.getContext("2d"),viewport:vp}).promise;
+    const op=await page.getOperatorList();
+    let ids=[];
+    for(let i=0;i<op.fnArray.length;i++){
+      const fn=op.fnArray[i];
+      if(fn===pdfjsLib.OPS.paintImageXObject || fn===pdfjsLib.OPS.paintJpegXObject){
+        const objId=op.argsArray[i]?.[0];
+        if(objId && !ids.includes(objId))ids.push(objId);
+      }
+    }
+    let pageImgs=[];
+    for(const objId of ids){
+      const obj=await getPdfObj(page,objId);
+      const canvas=pdfObjToCanvas(obj);
+      if(canvas)pageImgs.push({objId,canvas,w:canvas.width,h:canvas.height,area:canvas.width*canvas.height});
+    }
+    if(pageImgs.length){
+      const maxArea=Math.max(...pageImgs.map(x=>x.area));
+      const mains=pageImgs.filter(x=>x.area>=maxArea*.22 && x.w>=350 && x.h>=350);
+      const smalls=pageImgs.filter(x=>!mains.includes(x));
+      if(mains.length>=2){
+        for(let i=0;i<mains.length;i++){
+          const im=await canvasToImage(mains[i].canvas);
+          found.push({id:"pdf-"+pno+"-"+i+"-"+crypto.randomUUID(),name:`Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,img:im,w:im.naturalWidth,h:im.naturalHeight,source:"PDF Object",processed:null,upscaled:null});
+        }
+        extras.push(...smalls.map((x,i)=>({name:`Asset kecil H${pno}-${i+1}`,w:x.w,h:x.h})));
+      } else {
+        // Fallback: split rendered page as grid if embedded objects are not separated.
+        const crops=autoGridSplit(temp);
+        for(let i=0;i<crops.length;i++){
+          const im=await canvasToImage(crops[i]);
+          found.push({id:"grid-"+pno+"-"+i+"-"+crypto.randomUUID(),name:`Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,img:im,w:im.naturalWidth,h:im.naturalHeight,source:"PDF Auto Split",processed:null,upscaled:null});
+        }
+      }
+    }else{
+      const crops=autoGridSplit(temp);
+      for(let i=0;i<crops.length;i++){
+        const im=await canvasToImage(crops[i]);
+        found.push({id:"grid-"+pno+"-"+i+"-"+crypto.randomUUID(),name:`Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,img:im,w:im.naturalWidth,h:im.naturalHeight,source:"PDF Auto Split",processed:null,upscaled:null});
+      }
+    }
+    setProgress(Math.round((pno/pdf.numPages)*90));
+  }
+  designs=found;selectedDesignIds=new Set(designs.map(d=>d.id));updateUI();if(designs.length)selectDesign(designs[0].id);
+  $("importStatus").className="status good";
+  $("importStatus").innerHTML=`<b>BERHASIL: ${designs.length} desain/sign terdeteksi dan dipisahkan ✓</b><div class="small">${extras.length} asset kecil bawaan PDF diabaikan dari daftar desain utama. ${overlays.length} overlay tambahan tersedia untuk diterapkan seragam.</div>`;
+  setProgress(100);
+ }catch(err){
+  $("importStatus").className="status bad";$("importStatus").innerHTML=`<b>Gagal membaca PDF.</b><div class="small">${esc(err.message||String(err))}</div>`
+ }finally{$("readPdfBtn").disabled=!pdfFile}
+}
+function getPdfObj(page,id){
+ return new Promise(resolve=>{
+   try{
+     const direct=page.objs.get(id);
+     if(direct){resolve(direct);return}
+   }catch(e){}
+   try{page.objs.get(id,obj=>resolve(obj))}catch(e){resolve(null)}
+ })
+}
+function pdfObjToCanvas(obj){
+ if(!obj)return null;
+ const c=document.createElement("canvas"),ctx=c.getContext("2d");
+ if(typeof ImageBitmap!=="undefined" && obj instanceof ImageBitmap){c.width=obj.width;c.height=obj.height;ctx.drawImage(obj,0,0);return c}
+ if(obj.bitmap){c.width=obj.width||obj.bitmap.width;c.height=obj.height||obj.bitmap.height;ctx.drawImage(obj.bitmap,0,0,c.width,c.height);return c}
+ if(obj.data && obj.width && obj.height){
+   c.width=obj.width;c.height=obj.height;
+   const len=obj.data.length,px=obj.width*obj.height;
+   let rgba;
+   if(len===px*4)rgba=new Uint8ClampedArray(obj.data);
+   else if(len===px*3){rgba=new Uint8ClampedArray(px*4);for(let i=0,j=0;i<len;i+=3,j+=4){rgba[j]=obj.data[i];rgba[j+1]=obj.data[i+1];rgba[j+2]=obj.data[i+2];rgba[j+3]=255}}
+   else return null;
+   ctx.putImageData(new ImageData(rgba,obj.width,obj.height),0,0);return c
+ }
+ return null
+}
+function canvasToImage(c){return new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.src=c.toDataURL("image/png")})}
+function autoGridSplit(pageCanvas){
+ // fallback heuristic: try common advertising sheet grids and choose layout with cell aspect closest to portrait signs.
+ const W=pageCanvas.width,H=pageCanvas.height,ratio=W/H;
+ let candidates=[];
+ for(let cols=1;cols<=6;cols++)for(let rows=1;rows<=5;rows++){
+   const count=cols*rows;if(count<2||count>24)continue;
+   const cellRatio=(W/cols)/(H/rows);
+   let score=Math.abs(Math.log(cellRatio/.74)); // common portrait sign ratio ~ 35/45–.78
+   if(cellRatio>1.5||cellRatio<.35)score+=1;
+   candidates.push({cols,rows,count,score})
+ }
+ candidates.sort((a,b)=>a.score-b.score || Math.abs(b.count-8)-Math.abs(a.count-8));
+ const best=candidates[0];
+ const out=[];
+ for(let r=0;r<best.rows;r++)for(let c=0;c<best.cols;c++){
+   const x=Math.round(c*W/best.cols),y=Math.round(r*H/best.rows);
+   const x2=Math.round((c+1)*W/best.cols),y2=Math.round((r+1)*H/best.rows);
+   const crop=document.createElement("canvas");crop.width=x2-x;crop.height=y2-y;
+   crop.getContext("2d").drawImage(pageCanvas,x,y,x2-x,y2-y,0,0,crop.width,crop.height);out.push(crop)
+ }
+ return out
+}
+function updateUI(){
+ $("countDesign").textContent=designs.length;$("countExtra").textContent=overlays.length+extras.length;$("detectStatus").textContent=designs.length?"TERPISAH ✓":"—";
+ $("modeInfo").innerHTML=designs.length?`Mode: <b>FILE READY MODE</b> — desain tidak diubah; overlay tambahan diterapkan seragam ke semua desain. Proses siap cetak mempertahankan rasio, komposisi, dan posisi overlay persis seperti preview.`:`Mode: <b>Belum ada file</b>`;
+ $("contentDesignCard").classList.toggle("hidden",designs.length>0);
+ $("upscaleAllBtn").disabled=!designs.length;$("prepareAllBtn").disabled=!designs.length;
+ const g=$("gallery");g.innerHTML="";
+ designs.forEach((d,i)=>{
+   const div=document.createElement("div");div.className="item"+(d.id===selectedId?" active":"");div.onclick=()=>selectDesign(d.id);
+   const im=document.createElement("img");im.src=(d.processed||d.img).src;div.appendChild(im);
+   if(d.processed){const tag=document.createElement("div");tag.className="tag";tag.textContent="READY";div.appendChild(tag)}
+   const n=document.createElement("div");n.className="n";n.textContent=`${i+1}. ${d.name}`;div.appendChild(n);
+   const dd=document.createElement("div");dd.className="d";dd.textContent=`${d.w} × ${d.h}px • ${d.source}`;div.appendChild(dd);
+   g.appendChild(div)
+ });
+ updateSelectionUI();if(designs.length)renderAllPreviews(); else drawEmpty();
+}
+function selectDesign(id){selectedId=id;updateUI();refreshSelected();renderAllPreviews()}
+function refreshSelected(){
+ const d=designs.find(x=>x.id===selectedId);if(!d){drawEmpty();return}
+ const img=d.processed||d.upscaled||d.img;drawPreview(img);
+ const t=targetPx();const f=Math.max(t.w/d.w,t.h/d.h);
+ $("rName").textContent=d.name;$("rSource").textContent=`${d.w} × ${d.h} px`;$("rTarget").textContent=`${$("width").value} × ${$("height").value} ${$("unit").value}`;
+ $("rPpi").textContent=t.ppi+" PPI";$("rPixel").textContent=`${t.w.toLocaleString("id-ID")} × ${t.h.toLocaleString("id-ID")} px`;
+ $("rUpscale").textContent=f<=1?"Tidak perlu":f.toFixed(2)+"×";
+ let q,color;if(f<=1){q="AMAN CETAK ✓";color="var(--good)"}else if(f<=1.5){q="PERBAIKAN RINGAN";color="var(--info)"}else if(f<=3){q="PERLU UPSCALE";color="var(--warn)"}else{q="RESOLUSI RENDAH";color="var(--bad)"}
+ $("rQuality").textContent=q;$("rQuality").style.color=color;
+ $("rUpscaleStatus").textContent=d.upscaled?(d.repaired&&!d.upscaleFactor?"SUDAH DIPERBAIKI ✓":"SUDAH DIPERBESAR ✓"):"BELUM";
+ $("rUpscaleStatus").style.color=d.upscaled?"var(--good)":"var(--warn)";
+ if(d.processed){
+   $("rReady").textContent=`SIAP CETAK ✓ • ${d.outputW||d.processed.width} × ${d.outputH||d.processed.height}px`;
+   $("rReady").style.color="var(--good)";
+ }else{
+   $("rReady").textContent="BELUM DIPROSES";$("rReady").style.color="var(--warn)";
+ }
+ $("upscaleOneBtn").disabled=false;$("prepareOneBtn").disabled=false;$("downloadOneBtn").disabled=!d.processed;$("editLogoBtn").disabled=!activeOverlay()
+}
+function drawPreview(img){
+ renderAllPreviews();
+ updateOverlayInfo()
+}
+
+function toggleDesignSelection(id,checked){
+ if(checked)selectedDesignIds.add(id);else selectedDesignIds.delete(id);
+ updateSelectionUI();
+ renderAllPreviews()
+}
+function selectAllDesigns(){
+ selectedDesignIds=new Set(designs.map(d=>d.id));updateSelectionUI();renderAllPreviews()
+}
+function clearSelection(){
+ selectedDesignIds.clear();updateSelectionUI();renderAllPreviews()
+}
+function getSelectedDesigns(){
+ return designs.filter(d=>selectedDesignIds.has(d.id))
+}
+function updateSelectionUI(){
+ const n=selectedDesignIds.size;
+ if($("selectedCount"))$("selectedCount").textContent=n;
+ ["repairSelectedBtn","upscaleSelectedBtn","prepareSelectedBtn"].forEach(id=>{if($(id))$(id).disabled=n===0});
+ if($("downloadSelectedZipBtn")){
+   const ready=getSelectedDesigns().some(d=>d.processedCanvas);
+   $("downloadSelectedZipBtn").disabled=n===0||!ready
+ }
+}
+
+function renderAllPreviews(){
+ const wrap=$("multiPreview"); if(!wrap)return;
+ wrap.innerHTML="";
+ designs.forEach((d,i)=>{
+   const card=document.createElement("div");
+   card.className="preview-card"+(d.id===selectedId?" active":"")+(selectedDesignIds.has(d.id)?" selected":"");
+   card.onclick=(e)=>{if(e.target.classList.contains("preview-check"))return;selectDesign(d.id)};
+   const check=document.createElement("input");check.type="checkbox";check.className="preview-check";check.checked=selectedDesignIds.has(d.id);
+   check.onclick=(e)=>e.stopPropagation();
+   check.onchange=()=>toggleDesignSelection(d.id,check.checked);
+   card.appendChild(check);
+   const label=document.createElement("div");label.className="label";label.textContent=`${i+1}. ${d.name}`;card.appendChild(label);
+   const stage=document.createElement("div");stage.className="preview-stage";
+   const c=document.createElement("canvas");c.dataset.id=d.id;
+   const im=d.processed||d.upscaled||d.img, maxW=520,maxH=360,r=im.width/im.height;let w=maxW,h=w/r;if(h>maxH){h=maxH;w=h*r}
+   c.width=Math.max(180,Math.round(w));c.height=Math.max(120,Math.round(h));
+   const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(im,0,0,c.width,c.height);
+   // show overlay baked on non-active previews
+   if(d.id!==selectedId) drawOverlay(ctx,c.width,c.height);
+   stage.appendChild(c);
+   if(d.id===selectedId && activeOverlay()){
+      const hh=document.createElement("div");hh.id="overlayHandle";hh.className="overlay-handle";
+      hh.innerHTML='<img id="overlayHandleImg"><span class="rotate-line"></span><span class="rotate-dot" title="Tarik untuk rotasi"></span><span class="resize-dot" title="Tarik untuk ubah ukuran"></span>';
+      stage.appendChild(hh);
+   }
+   card.appendChild(stage);wrap.appendChild(card)
+ });
+ bindActiveOverlayHandle();
+ updateOverlayHandle()
+}
+function getActiveCanvas(){
+ return document.querySelector(`canvas[data-id="${selectedId}"]`);
+}
+function updateOverlayHandle(){
+ const hh=$("overlayHandle"),img=$("overlayHandleImg"),o=activeOverlay(),c=getActiveCanvas();
+ if(!hh||!img||!o||!c)return;
+ img.src=o.img.src;
+ const s=overlaySettings(),dw=c.clientWidth*s.w,dh=dw*(o.h/o.w);
+ hh.style.left=(c.clientWidth*s.x)+"px";hh.style.top=(c.clientHeight*s.y)+"px";hh.style.width=dw+"px";hh.style.height=dh+"px";
+ hh.style.opacity=s.opacity;hh.style.transform=`rotate(${s.rot}deg)`;
+}
+function bindActiveOverlayHandle(){
+ const hh=$("overlayHandle");if(!hh)return;
+ let mode=null,startX=0,startY=0,startLeft=0,startTop=0,startW=0,startH=0,startAngle=0,centerX=0,centerY=0;
+ function point(e){const t=e.touches?e.touches[0]:e;return{x:t.clientX,y:t.clientY}}
+ function downMove(e){if(e.target.classList.contains("resize-dot")||e.target.classList.contains("rotate-dot"))return;e.preventDefault();mode="move";const p=point(e);startX=p.x;startY=p.y;startLeft=parseFloat(hh.style.left)||0;startTop=parseFloat(hh.style.top)||0}
+ function downResize(e){e.preventDefault();e.stopPropagation();mode="resize";const p=point(e);startX=p.x;startY=p.y;startW=parseFloat(hh.style.width)||50;startH=parseFloat(hh.style.height)||50}
+ function downRotate(e){e.preventDefault();e.stopPropagation();mode="rotate";const p=point(e),rect=hh.getBoundingClientRect();centerX=rect.left+rect.width/2;centerY=rect.top+rect.height/2;startAngle=Math.atan2(p.y-centerY,p.x-centerX)*180/Math.PI-(Number($("overlayRot").value)||0)}
+ function move(e){
+   if(!mode)return;e.preventDefault();const p=point(e),c=getActiveCanvas();if(!c)return;
+   if(mode==="move"){
+     let left=Math.max(0,Math.min(c.clientWidth-hh.offsetWidth,startLeft+(p.x-startX)));
+     let top=Math.max(0,Math.min(c.clientHeight-hh.offsetHeight,startTop+(p.y-startY)));
+     $("overlayX").value=(left/c.clientWidth*100).toFixed(2);$("overlayY").value=(top/c.clientHeight*100).toFixed(2);
+   }else if(mode==="resize"){
+     let nw=Math.max(20,Math.min(c.clientWidth,startW+(p.x-startX)));
+     $("overlayW").value=(nw/c.clientWidth*100).toFixed(2);
+   }else if(mode==="rotate"){
+     let ang=Math.atan2(p.y-centerY,p.x-centerX)*180/Math.PI-startAngle;
+     if(ang>180)ang-=360;if(ang<-180)ang+=360;$("overlayRot").value=Math.round(ang);
+   }
+   invalidateProcessed();updateOverlayHandle();updateOverlayInfo();refreshAllNonActivePreviewOverlays()
+ }
+ function up(){if(!mode)return;mode=null;renderAllPreviews();refreshSelected()}
+ hh.addEventListener("mousedown",downMove);hh.addEventListener("touchstart",downMove,{passive:false});
+ hh.querySelector(".resize-dot").addEventListener("mousedown",downResize);hh.querySelector(".resize-dot").addEventListener("touchstart",downResize,{passive:false});
+ hh.querySelector(".rotate-dot").addEventListener("mousedown",downRotate);hh.querySelector(".rotate-dot").addEventListener("touchstart",downRotate,{passive:false});
+ document.addEventListener("mousemove",move,{once:false});document.addEventListener("touchmove",move,{passive:false});
+ document.addEventListener("mouseup",up,{once:true});document.addEventListener("touchend",up,{once:true})
+}
+function refreshAllNonActivePreviewOverlays(){
+ designs.forEach(d=>{
+   if(d.id===selectedId)return;
+   const c=document.querySelector(`canvas[data-id="${d.id}"]`);if(!c)return;
+   const im=d.processed||d.upscaled||d.img,ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,c.width,c.height);drawOverlay(ctx,c.width,c.height)
+ })
+}
+function drawEmpty(){
+ const wrap=$("multiPreview");if(wrap)wrap.innerHTML='<div class="status"><div class="small">Belum ada desain. Import PDF atau gambar terlebih dahulu.</div></div>';
+ ["rName","rSource","rTarget","rPpi","rPixel","rUpscale","rQuality","rUpscaleStatus","rReady"].forEach(id=>$(id).textContent="—")
+}
+
+async function repairDesignQuality(d){
+ // Perbaiki kualitas TANPA mengubah ukuran pixel.
+ const src=d.upscaled||d.img;
+ const sw=src.naturalWidth||src.width,sh=src.naturalHeight||src.height;
+ const c=document.createElement("canvas");c.width=sw;c.height=sh;
+ const ctx=c.getContext("2d",{willReadFrequently:true,alpha:true});
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(src,0,0,sw,sh);
+
+ // sharpening ringan, tidak mengubah rasio/ukuran/posisi
+ if(sw*sh<=9000000){
+   const im=ctx.getImageData(0,0,sw,sh),s=im.data,out=new Uint8ClampedArray(s),w=sw,hh=sh,a=.055;
+   for(let y=1;y<hh-1;y++)for(let x=1;x<w-1;x++){
+     const i=(y*w+x)*4;
+     for(let ch=0;ch<3;ch++){
+       const sharp=s[i+ch]*5-(s[i-4+ch]+s[i+4+ch]+s[i-w*4+ch]+s[i+w*4+ch]);
+       out[i+ch]=Math.max(0,Math.min(255,s[i+ch]*(1-a)+sharp*a))
+     }
+   }
+   ctx.putImageData(new ImageData(out,w,hh),0,0)
+ }
+ const im=await canvasToImage(c);
+ d.upscaled=im;d.repaired=true;d.processed=null;d.processedCanvas=null;zipBlob=null;
+ return d
+}
+async function repairSelectedFiles(){
+ const arr=getSelectedDesigns();if(!arr.length)return;
+ $("repairSelectedBtn").disabled=true;setProgress(5);
+ for(let i=0;i<arr.length;i++){await repairDesignQuality(arr[i]);setProgress(Math.round(((i+1)/arr.length)*95));updateUI()}
+ setProgress(100);$("repairSelectedBtn").disabled=false;refreshSelected();updateSelectionUI()
+}
+async function upscaleSelectedFiles(){
+ const arr=getSelectedDesigns();if(!arr.length)return;
+ $("upscaleSelectedBtn").disabled=true;setProgress(5);
+ for(let i=0;i<arr.length;i++){await upscaleDesign(arr[i]);setProgress(Math.round(((i+1)/arr.length)*95));updateUI()}
+ setProgress(100);$("upscaleSelectedBtn").disabled=false;refreshSelected();updateSelectionUI()
+}
+async function prepareSelectedFiles(){
+ const arr=getSelectedDesigns();if(!arr.length)return;
+ $("prepareSelectedBtn").disabled=true;setProgress(5);
+ for(let i=0;i<arr.length;i++){await prepareDesign(arr[i]);setProgress(Math.round(((i+1)/arr.length)*90));updateUI()}
+ setProgress(100);$("prepareSelectedBtn").disabled=false;refreshSelected();updateSelectionUI()
+}
+async function downloadSelectedZip(){
+ const arr=getSelectedDesigns().filter(d=>d.processedCanvas);
+ if(!arr.length)return;
+ if(!window.JSZip)return;
+ const zip=new JSZip();
+ arr.forEach((d,i)=>{
+   const blob=dataUrlToBlob(d.processedCanvas.toDataURL("image/png",1));
+   const idx=designs.indexOf(d)+1;
+   zip.file(`Sign_${String(idx).padStart(2,"0")}_READY.png`,blob)
+ });
+ const blob=await zip.generateAsync({type:"blob"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`PrintDesign_${arr.length}_FILE_TERPILIH.zip`;a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1200)
+}
+
+async function upscaleSelected(){
+ const d=designs.find(x=>x.id===selectedId);if(!d)return;
+ await upscaleDesign(d);updateUI();refreshSelected()
+}
+async function prepareSelected(){
+ const d=designs.find(x=>x.id===selectedId);if(!d)return;
+ await prepareDesign(d);updateUI();refreshSelected()
+}
+async function upscaleDesign(d){
+ const t=targetPx();
+ const src=d.upscaled||d.img;
+ const srcW=src.naturalWidth||src.width,srcH=src.naturalHeight||src.height;
+
+ let scale=Math.max(1,t.w/srcW,t.h/srcH);
+ const maxSide=7000;
+ if(Math.max(srcW*scale,srcH*scale)>maxSide) scale=maxSide/Math.max(srcW,srcH);
+
+ const tw=Math.max(1,Math.round(srcW*scale)),th=Math.max(1,Math.round(srcH*scale));
+ if(scale<=1.001){
+   d.upscaled=src;d.upscaledCanvas=null;d.upscaleFactor=1;
+   return d
+ }
+
+ const c=document.createElement("canvas");c.width=tw;c.height=th;
+ const ctx=c.getContext("2d",{willReadFrequently:true,alpha:true});
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+ ctx.drawImage(src,0,0,tw,th);
+
+ // light sharpen only during resolution enlargement
+ if(tw*th<=8500000){
+   const im=ctx.getImageData(0,0,tw,th),s=im.data,out=new Uint8ClampedArray(s),w=tw,hh=th,a=.07;
+   for(let y=1;y<hh-1;y++)for(let x=1;x<w-1;x++){
+     const i=(y*w+x)*4;
+     for(let ch=0;ch<3;ch++){
+       const sharp=s[i+ch]*5-(s[i-4+ch]+s[i+4+ch]+s[i-w*4+ch]+s[i+w*4+ch]);
+       out[i+ch]=Math.max(0,Math.min(255,s[i+ch]*(1-a)+sharp*a))
+     }
+   }
+   ctx.putImageData(new ImageData(out,w,hh),0,0)
+ }
+ const im=await canvasToImage(c);
+ d.upscaled=im;d.upscaledCanvas=c;d.upscaleFactor=scale;
+ // prepared output becomes stale after changing source resolution
+ d.processed=null;d.processedCanvas=null;zipBlob=null;
+ return d
+}
+async function prepareDesign(d){
+ // Preparing file does NOT upscale automatically.
+ // It only applies overlay and creates final output while preserving ratio.
+ const src=d.upscaled||d.img;
+ const srcW=src.naturalWidth||src.width,srcH=src.naturalHeight||src.height;
+ const c=document.createElement("canvas");c.width=srcW;c.height=srcH;
+ const ctx=c.getContext("2d",{alpha:true});
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+ ctx.drawImage(src,0,0,srcW,srcH);
+ drawOverlay(ctx,srcW,srcH);
+
+ const im=await canvasToImage(c);
+ d.processed=im;d.processedCanvas=c;
+ d.outputW=srcW;d.outputH=srcH;d.safeProcessed=true;
+ return d
+}
+async function upscaleAll(){
+ if(!designs.length)return;$("upscaleAllBtn").disabled=true;setProgress(5);
+ for(let i=0;i<designs.length;i++){
+   await upscaleDesign(designs[i]);
+   setProgress(Math.round(((i+1)/designs.length)*95));updateUI()
+ }
+ setProgress(100);$("upscaleAllBtn").disabled=false;refreshSelected()
+}
+async function prepareAll(){
+ if(!designs.length)return;$("prepareAllBtn").disabled=true;setProgress(5);
+ for(let i=0;i<designs.length;i++){
+   await prepareDesign(designs[i]);
+   setProgress(Math.round(((i+1)/designs.length)*90));updateUI()
+ }
+ await buildZip();setProgress(100);$("prepareAllBtn").disabled=false;$("zipBtn").disabled=false;refreshSelected()
+}
+function dataUrlToBlob(dataUrl){const [head,data]=dataUrl.split(","),mime=head.match(/:(.*?);/)[1],bin=atob(data);let arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime})}
+async function buildZip(){
+ if(!window.JSZip)return;const zip=new JSZip();
+ designs.forEach((d,i)=>{if(d.processedCanvas){const blob=dataUrlToBlob(d.processedCanvas.toDataURL("image/png",1));zip.file(`Sign_${String(i+1).padStart(2,"0")}_READY.png`,blob)}});
+ zipBlob=await zip.generateAsync({type:"blob"})
+}
+async function downloadZip(){if(!zipBlob)await buildZip();if(!zipBlob)return;const a=document.createElement("a");a.href=URL.createObjectURL(zipBlob);a.download="PrintDesign_READY_TO_PRINT.zip";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function downloadSelected(){const d=designs.find(x=>x.id===selectedId);if(!d?.processedCanvas)return;const a=document.createElement("a");a.href=d.processedCanvas.toDataURL("image/png",1);a.download=(d.name.replace(/[^\w\-]+/g,"_")||"design")+"_READY.png";a.click()}
+function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("pdfFile").value="";$("imageFiles").value="";$("readPdfBtn").disabled=true;$("zipBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
+
+// ===================== PROJECT HISTORY =====================
+function getHistory(){try{return JSON.parse(localStorage.getItem("pdai_history")||"[]")}catch(e){return[]}}
+function setHistory(v){localStorage.setItem("pdai_history",JSON.stringify(v))}
+function openProjectModal(){$("projectModal").classList.remove("hidden");$("projectName").value="";$("projectNote").value=""}
+function openHistoryModal(){$("historyModal").classList.remove("hidden");renderHistory()}
+function openDriveModal(){
+ $("driveModal").classList.remove("hidden");
+ $("googleClientId").value=localStorage.getItem("pdai_google_client_id")||"";
+}
+function closeModal(id){$(id).classList.add("hidden")}
+function projectSnapshot(){
+ return {
+   id:"p-"+Date.now(),
+   name:$("projectName").value.trim()||("Project "+new Date().toLocaleString("id-ID")),
+   note:$("projectNote").value.trim(),
+   createdAt:new Date().toISOString(),
+   updatedAt:new Date().toISOString(),
+   settings:{
+     product:$("product").value,width:$("width").value,height:$("height").value,unit:$("unit").value,
+     qualityMode:$("qualityMode").value,manualPpi:$("manualPpi").value,
+     overlayX:$("overlayX").value,overlayY:$("overlayY").value,overlayW:$("overlayW").value,
+     overlayRot:$("overlayRot").value,overlayOpacity:$("overlayOpacity").value,overlayMargin:$("overlayMargin").value
+   },
+   files:designs.map((d,i)=>({name:d.name,w:d.w,h:d.h,source:d.source,selected:selectedDesignIds.has(d.id)})),
+   overlayNames:overlays.map(o=>o.name)
+ }
+}
+function saveProjectHistory(){
+ const p=projectSnapshot(),hist=getHistory();hist.unshift(p);setHistory(hist.slice(0,100));
+ closeModal("projectModal");alert("Project tersimpan di riwayat perangkat.")
+}
+function renderHistory(){
+ const wrap=$("historyList"),hist=getHistory();wrap.innerHTML="";
+ if(!hist.length){wrap.innerHTML='<div class="small">Belum ada project tersimpan.</div>';return}
+ hist.forEach(p=>{
+   const d=document.createElement("div");d.className="history-item";
+   d.innerHTML=`<div class="history-head"><div><div class="history-name">${esc(p.name)}</div><div class="history-meta">${new Date(p.updatedAt||p.createdAt).toLocaleString("id-ID")} • ${p.files?.length||0} file</div></div></div>
+   <div class="history-note">${esc(p.note||"Tanpa catatan")}</div>
+   <div class="actions"><button onclick="loadHistoryProject('${p.id}')">Buka Setting</button><button onclick="editHistoryProject('${p.id}')">Edit</button><button class="danger" onclick="deleteHistoryProject('${p.id}')">Hapus</button></div>`;
+   wrap.appendChild(d)
+ })
+}
+function loadHistoryProject(id){
+ const p=getHistory().find(x=>x.id===id);if(!p)return;
+ const s=p.settings||{};
+ ["product","width","height","unit","qualityMode","manualPpi","overlayX","overlayY","overlayW","overlayRot","overlayOpacity","overlayMargin"].forEach(k=>{if($(k)&&s[k]!=null)$(k).value=s[k]});
+ closeModal("historyModal");refreshSelected();alert("Setting project dimuat. File asli perlu di-import kembali bila browser sudah ditutup.")
+}
+function editHistoryProject(id){
+ const hist=getHistory(),p=hist.find(x=>x.id===id);if(!p)return;
+ const n=prompt("Nama project:",p.name);if(n===null)return;
+ const note=prompt("Catatan:",p.note||"");if(note===null)return;
+ p.name=n.trim()||p.name;p.note=note;p.updatedAt=new Date().toISOString();setHistory(hist);renderHistory()
+}
+function deleteHistoryProject(id){
+ if(!confirm("Hapus project ini dari riwayat?"))return;
+ setHistory(getHistory().filter(x=>x.id!==id));renderHistory()
+}
+
+// ===================== PWA INSTALL =====================
+let deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;$("installBtn").disabled=false});
+async function installPWA(){
+ if(deferredInstallPrompt){deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;return}
+ alert("Jika tombol instalasi belum muncul: buka aplikasi dari HTTPS di Chrome, lalu pilih menu ⋮ > Tambahkan ke layar utama / Instal aplikasi.")
+}
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))
+}
+
+// ===================== GOOGLE DRIVE =====================
+let driveToken=null;
+function saveDriveConfig(){
+ const id=$("googleClientId").value.trim();localStorage.setItem("pdai_google_client_id",id);
+ $("driveStatus").textContent=id?"Client ID tersimpan. Selanjutnya klik Login Google.":"Client ID dikosongkan."
+}
+function driveSignIn(){
+ const clientId=localStorage.getItem("pdai_google_client_id")||$("googleClientId").value.trim();
+ if(!clientId){$("driveStatus").textContent="Isi Google OAuth Client ID terlebih dahulu.";return}
+ if(location.protocol!=="https:" && location.hostname!=="localhost"){$("driveStatus").textContent="Login Google Drive membutuhkan HTTPS / localhost.";return}
+ if(!window.google?.accounts?.oauth2){$("driveStatus").textContent="Google Identity belum termuat. Coba beberapa detik lagi.";return}
+ const tc=google.accounts.oauth2.initTokenClient({
+   client_id:clientId,scope:"https://www.googleapis.com/auth/drive.file",
+   callback:r=>{if(r.access_token){driveToken=r.access_token;$("driveStatus").textContent="Login Google berhasil ✓"}else $("driveStatus").textContent="Login Google gagal."}
+ });tc.requestAccessToken()
+}
+async function backupHistoryToDrive(){
+ if(!driveToken){$("driveStatus").textContent="Login Google terlebih dahulu.";return}
+ const data=JSON.stringify({version:7,exportedAt:new Date().toISOString(),history:getHistory()},null,2);
+ const meta={name:"PrintDesignAI_Backup.json",mimeType:"application/json"};
+ const boundary="pdai_"+Date.now();
+ const body=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${boundary}--`;
+ const r=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",{method:"POST",headers:{Authorization:"Bearer "+driveToken,"Content-Type":"multipart/related; boundary="+boundary},body});
+ $("driveStatus").textContent=r.ok?"Backup riwayat berhasil disimpan ke Google Drive ✓":"Backup gagal. Silakan login ulang."
+}
+async function restoreHistoryFromDrive(){
+ if(!driveToken){$("driveStatus").textContent="Login Google terlebih dahulu.";return}
+ const q=encodeURIComponent("name='PrintDesignAI_Backup.json' and trashed=false");
+ const list=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=modifiedTime desc&pageSize=1&fields=files(id,name,modifiedTime)`,{headers:{Authorization:"Bearer "+driveToken}});
+ const js=await list.json();if(!js.files?.length){$("driveStatus").textContent="Backup PrintDesignAI_Backup.json tidak ditemukan.";return}
+ const r=await fetch(`https://www.googleapis.com/drive/v3/files/${js.files[0].id}?alt=media`,{headers:{Authorization:"Bearer "+driveToken}});
+ const b=await r.json();if(Array.isArray(b.history)){setHistory(b.history);$("driveStatus").textContent="Riwayat berhasil direstore dari Drive ✓";renderHistory()}else $("driveStatus").textContent="Format backup tidak sesuai."
+}
+
+drawEmpty();updateUI();
+</script>
+</body>
+</html>
