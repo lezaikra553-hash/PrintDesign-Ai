@@ -204,8 +204,19 @@ display:grid;place-items:center;padding:14px;overflow:auto}
       <div class="field"><label>Tinggi Final</label><input id="height" type="number" step="0.1" value="45"></div>
       <div class="field"><label>Satuan</label><select id="unit"><option value="cm">cm</option><option value="mm">mm</option><option value="m">meter</option></select></div>
       <div class="field"><label>Target PPI Manual</label><input id="manualPpi" type="number" value="300" disabled></div>
+      <div class="field"><label>Render PDF</label><select id="pdfRenderPpi">
+        <option value="auto" selected>Auto — ikut target cetak</option>
+        <option value="300">300 PPI — Print Master</option>
+        <option value="450">450 PPI — High Quality</option>
+        <option value="600">600 PPI — Maximum Detail</option>
+      </select></div>
+      <div class="field"><label>Export Master</label><select id="exportFormat">
+        <option value="png" selected>PNG — Print Master</option>
+        <option value="pdf">PDF — Print Master</option>
+        <option value="svg">SVG — embed raster (bukan vector murni)</option>
+      </select></div>
     </div>
-    <div class="note">Jenis pekerjaan mencakup offset, digital printing, advertising, signage, etching dan industrial marking. Ukuran target digunakan untuk menghitung kebutuhan resolusi. Tombol <b>PERBESAR RESOLUSI</b> hanya meningkatkan pixel secara proporsional. Tombol <b>SIAPKAN FILE</b> hanya menerapkan overlay/finalisasi tanpa memperbesar resolusi.</div>
+    <div class="note">Mode baru: PDF dirender pada PPI tinggi sehingga teks/garis vektor dari PDF tidak cepat pecah saat dirasterisasi. Untuk JPG/PNG/WEBP, aplikasi meningkatkan pixel sampai target cetak lalu melakukan sharpening ringan. <b>Catatan penting:</b> upscale tidak dapat menciptakan detail asli yang memang tidak ada. SVG hasil export berisi gambar raster di dalam SVG, jadi bukan vector murni.</div>
    </div>
 
    <div id="contentDesignCard" class="card hidden" style="margin-top:18px">
@@ -257,6 +268,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
       <div class="row"><span>Status kualitas</span><b id="rQuality">—</b></div>
       <div class="row"><span>Status resolusi</span><b id="rUpscaleStatus">—</b></div>
       <div class="row"><span>Status file</span><b id="rReady">—</b></div>
+       <div class="row"><span>Metode render PDF</span><b id="rPdfMode">—</b></div>
     </div>
    </div>
   </div>
@@ -355,6 +367,8 @@ display:grid;place-items:center;padding:14px;overflow:auto}
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -375,7 +389,9 @@ $("qualityMode").addEventListener("change",()=>{$("manualPpi").disabled=$("quali
 $("overlaySelect").addEventListener("change",()=>{activeOverlayId=$("overlaySelect").value||null;invalidateProcessed();renderOverlayGallery();refreshSelected();renderAllPreviews()});
 ["overlayRot","overlayOpacity","overlayMargin"].forEach(id=>{$(id).addEventListener("input",()=>{invalidateProcessed();updateOverlayInfo();refreshSelected();renderAllPreviews()})});
 
-["product","width","height","unit","manualPpi"].forEach(id=>{$(id).addEventListener("input",refreshSelected);$(id).addEventListener("change",refreshSelected)});
+["product","width","height","unit","manualPpi"].forEach(id=>{if($(id)){$(id).addEventListener("input",refreshSelected);$(id).addEventListener("change",refreshSelected)}});
+$("pdfRenderPpi")?.addEventListener("change",()=>{invalidateProcessed();refreshSelected()});
+$("exportFormat")?.addEventListener("change",refreshSelected);
 $("product").addEventListener("change",()=>{$("customProductWrap").classList.toggle("hidden",$("product").value!=="custom")});
 
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
@@ -560,6 +576,93 @@ function rotateOverlay(delta){
 function setRotation(a){$("overlayRot").value=a;syncEditorBox();invalidateProcessed();updateOverlayInfo()}
 window.addEventListener("resize",()=>{if(!$("logoEditorModal").classList.contains("hidden"))renderLogoEditor()});
 
+function selectedPdfRenderPpi(){
+  const mode=$("pdfRenderPpi")?.value||"auto";
+  if(mode==="auto") return targetPpi();
+  return Number(mode)||300;
+}
+function pdfRenderScale(){
+  // PDF uses 72 points/inch. Render directly at the requested print PPI.
+  return Math.max(1,selectedPdfRenderPpi()/72);
+}
+function maxCanvasDimensions(w,h){
+  // Keep browser memory under control while still allowing large-format masters.
+  const maxSide=12000, maxPixels=60000000;
+  let scale=Math.min(1,maxSide/Math.max(w,h),Math.sqrt(maxPixels/(w*h)));
+  return {w:Math.max(1,Math.round(w*scale)),h:Math.max(1,Math.round(h*scale)),scale};
+}
+function safeCanvas(w,h){
+  const m=maxCanvasDimensions(w,h);
+  const c=document.createElement("canvas");c.width=m.w;c.height=m.h;
+  return {canvas:c,scale:m.scale};
+}
+function imageToBlob(img,type="image/png",quality=1){
+  const c=document.createElement("canvas");
+  c.width=img.naturalWidth||img.width;c.height=img.naturalHeight||img.height;
+  const ctx=c.getContext("2d");ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+  ctx.drawImage(img,0,0,c.width,c.height);
+  return new Promise(resolve=>c.toBlob(resolve,type,quality));
+}
+function downloadBlob(blob,name){
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+async function downloadPrintMasterPdf(d){
+  if(!window.PDFLib || !d?.processedCanvas)return false;
+  const canvas=d.processedCanvas;
+  const png=canvas.toDataURL("image/png",1);
+  const pdf=await PDFLib.PDFDocument.create();
+  // 1 point = 1/72 inch. Use the target PPI to keep physical dimensions correct.
+  const ppi=targetPpi();
+  const pageW=canvas.width/ppi*72, pageH=canvas.height/ppi*72;
+  const page=pdf.addPage([pageW,pageH]);
+  const image=await pdf.embedPng(png);
+  page.drawImage(image,{x:0,y:0,width:pageW,height:pageH});
+  const bytes=await pdf.save({useObjectStreams:true});
+  downloadBlob(new Blob([bytes],{type:"application/pdf"}),(d.name.replace(/[^\w\-]+/g,"_")||"design")+"_PRINT_MASTER.pdf");
+  return true;
+}
+function downloadPrintMasterSvg(d){
+  if(!d?.processedCanvas)return false;
+  const c=d.processedCanvas;
+  const png=c.toDataURL("image/png",1);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${c.width}" height="${c.height}" viewBox="0 0 ${c.width} ${c.height}"><image href="${png}" width="${c.width}" height="${c.height}" preserveAspectRatio="none"/></svg>`;
+  downloadBlob(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}),(d.name.replace(/[^\w\-]+/g,"_")||"design")+"_PRINT_MASTER.svg");
+  return true;
+}
+async function vectorizeSelectedFile(){
+  const d=getSelectedDesign();if(!d)return;
+  if(!window.ImageTracer){
+    alert("Vectorizer belum termuat. Pastikan internet aktif lalu buka ulang aplikasi.");
+    return;
+  }
+  // Intended for logos, icons, flat-color artwork and line art — not photographs.
+  const src=d.processed||d.upscaled||d.img;
+  const c=document.createElement("canvas");
+  const max=2200, r=(src.naturalWidth||src.width)/(src.naturalHeight||src.height);
+  let w=Math.min(max,src.naturalWidth||src.width),h=Math.round(w/r);
+  if(h>max){h=max;w=Math.round(h*r)}
+  c.width=w;c.height=h;
+  const ctx=c.getContext("2d");ctx.drawImage(src,0,0,w,h);
+  const data=ctx.getImageData(0,0,w,h);
+  const options={
+    corsenabled:false,
+    ltres:1,ltrres:1,
+    qtres:1,
+    pathomit:8,
+    numberofcolors:32,
+    strokewidth:0,
+    linefilter:false,
+    scale:1
+  };
+  try{
+    const svg=ImageTracer.imagedataToSVG(data,options);
+    downloadBlob(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}),(d.name.replace(/[^\w\-]+/g,"_")||"design")+"_VECTOR.svg");
+  }catch(e){
+    console.error(e);
+    alert("Vectorisasi gagal. Gunakan untuk logo/ikon/line-art dengan warna relatif sederhana.");
+  }
+}
 async function importUniversalDesigns(){
  const files=universalDesignFiles||[];if(!files.length)return;
  $("importUniversalBtn").disabled=true;setProgress(5);
@@ -614,7 +717,10 @@ async function readPdf(append=true){
 
     for(let pno=1;pno<=pdf.numPages;pno++){
       const page=await pdf.getPage(pno);
-      const vp=page.getViewport({scale:1.2});
+      const renderScale=pdfRenderScale();
+      const vp0=page.getViewport({scale:renderScale});
+      const dims=maxCanvasDimensions(vp0.width,vp0.height);
+      const vp=page.getViewport({scale:renderScale*dims.scale});
       const temp=document.createElement("canvas");
       temp.width=Math.round(vp.width);
       temp.height=Math.round(vp.height);
@@ -656,7 +762,7 @@ async function readPdf(append=true){
               id:"pdf-"+pno+"-"+i+"-"+crypto.randomUUID(),
               name:`${pdfFile.name} • Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,
               img:im,w:im.naturalWidth,h:im.naturalHeight,
-              source:"PDF Object",processed:null,upscaled:null
+              source:"PDF Object (native pixels)",processed:null,upscaled:null
             });
           }
           extras.push(...smalls.map((x,i)=>({
@@ -804,7 +910,9 @@ function refreshSelected(){
  }else{
    $("rReady").textContent="BELUM DIPROSES";$("rReady").style.color="var(--warn)";
  }
- $("upscaleOneBtn").disabled=false;$("prepareOneBtn").disabled=false;$("downloadOneBtn").disabled=!d.processed;$("editLogoBtn").disabled=!activeOverlay()
+ $("upscaleOneBtn").disabled=false;$("prepareOneBtn").disabled=false;$("downloadOneBtn").disabled=!d.processed;$("editLogoBtn").disabled=!activeOverlay();
+  if($("vectorizeOneBtn"))$("vectorizeOneBtn").disabled=false;
+  if($("rPdfMode"))$("rPdfMode").textContent=d.source?.includes("PDF")?`${selectedPdfRenderPpi()} PPI`: "Tidak relevan"
 }
 function drawPreview(img){
  renderAllPreviews();
@@ -828,7 +936,7 @@ function getSelectedDesigns(){
 function updateSelectionUI(){
  const n=selectedDesignIds.size;
  if($("selectedCount"))$("selectedCount").textContent=n;
- ["repairSelectedBtn","upscaleSelectedBtn","prepareSelectedBtn"].forEach(id=>{if($(id))$(id).disabled=n===0});
+ ["repairSelectedBtn","upscaleSelectedBtn","prepareSelectedBtn","vectorizeSelectedBtn"].forEach(id=>{if($(id))$(id).disabled=n===0});
  if($("downloadSelectedZipBtn")){
    const ready=getSelectedDesigns().some(d=>d.processedCanvas);
    $("downloadSelectedZipBtn").disabled=n===0||!ready
@@ -914,7 +1022,8 @@ function refreshAllNonActivePreviewOverlays(){
 }
 function drawEmpty(){
  const wrap=$("multiPreview");if(wrap)wrap.innerHTML='<div class="status"><div class="small">Belum ada desain. Import PDF atau gambar terlebih dahulu.</div></div>';
- ["rName","rSource","rTarget","rPpi","rPixel","rUpscale","rQuality","rUpscaleStatus","rReady"].forEach(id=>$(id).textContent="—")
+ ["rName","rSource","rTarget","rPpi","rPixel","rUpscale","rQuality","rUpscaleStatus","rReady","rPdfMode"].forEach(id=>$(id).textContent="—");
+  ["vectorizeOneBtn","vectorizeSelectedBtn"].forEach(id=>{if($(id))$(id).disabled=true})
 }
 
 async function repairDesignQuality(d){
@@ -983,42 +1092,53 @@ async function prepareSelected(){
  await prepareDesign(d);updateUI();refreshSelected()
 }
 async function upscaleDesign(d){
- const t=targetPx();
- const src=d.upscaled||d.img;
- const srcW=src.naturalWidth||src.width,srcH=src.naturalHeight||src.height;
+  const t=targetPx();
+  const src=d.upscaled||d.img;
+  const srcW=src.naturalWidth||src.width,srcH=src.naturalHeight||src.height;
 
- let scale=Math.max(1,t.w/srcW,t.h/srcH);
- const maxSide=7000;
- if(Math.max(srcW*scale,srcH*scale)>maxSide) scale=maxSide/Math.max(srcW,srcH);
+  let scale=Math.max(1,t.w/srcW,t.h/srcH);
+  const maxSide=12000,maxPixels=60000000;
+  scale=Math.min(scale,maxSide/Math.max(srcW,srcH),Math.sqrt(maxPixels/(srcW*srcH)));
 
- const tw=Math.max(1,Math.round(srcW*scale)),th=Math.max(1,Math.round(srcH*scale));
- if(scale<=1.001){
-   d.upscaled=src;d.upscaledCanvas=null;d.upscaleFactor=1;
-   return d
- }
+  const tw=Math.max(1,Math.round(srcW*scale)),th=Math.max(1,Math.round(srcH*scale));
+  if(scale<=1.001){
+    d.upscaled=src;d.upscaledCanvas=null;d.upscaleFactor=1;
+    return d;
+  }
 
- const c=document.createElement("canvas");c.width=tw;c.height=th;
- const ctx=c.getContext("2d",{willReadFrequently:true,alpha:true});
- ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
- ctx.drawImage(src,0,0,tw,th);
+  // Two-stage enlargement is gentler on text/edges than one huge jump.
+  let current=src;
+  let cw=srcW,ch=srcH;
+  while(Math.max(tw/cw,th/ch)>2.2){
+    const nw=Math.round(cw*2),nh=Math.round(ch*2);
+    const c=document.createElement("canvas");c.width=nw;c.height=nh;
+    const ctx=c.getContext("2d",{alpha:true});
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+    ctx.drawImage(current,0,0,nw,nh);
+    current=c;cw=nw;ch=nh;
+  }
+  const c=document.createElement("canvas");c.width=tw;c.height=th;
+  const ctx=c.getContext("2d",{willReadFrequently:true,alpha:true});
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+  ctx.drawImage(current,0,0,tw,th);
 
- // light sharpen only during resolution enlargement
- if(tw*th<=8500000){
-   const im=ctx.getImageData(0,0,tw,th),s=im.data,out=new Uint8ClampedArray(s),w=tw,hh=th,a=.07;
-   for(let y=1;y<hh-1;y++)for(let x=1;x<w-1;x++){
-     const i=(y*w+x)*4;
-     for(let ch=0;ch<3;ch++){
-       const sharp=s[i+ch]*5-(s[i-4+ch]+s[i+4+ch]+s[i-w*4+ch]+s[i+w*4+ch]);
-       out[i+ch]=Math.max(0,Math.min(255,s[i+ch]*(1-a)+sharp*a))
-     }
-   }
-   ctx.putImageData(new ImageData(out,w,hh),0,0)
- }
- const im=await canvasToImage(c);
- d.upscaled=im;d.upscaledCanvas=c;d.upscaleFactor=scale;
- // prepared output becomes stale after changing source resolution
- d.processed=null;d.processedCanvas=null;zipBlob=null;
- return d
+  // Controlled sharpening. Avoid pixel-loop processing for huge canvases.
+  if(tw*th<=12000000){
+    const im=ctx.getImageData(0,0,tw,th),s=im.data,out=new Uint8ClampedArray(s),w=tw,hh=th,a=.055;
+    for(let y=1;y<hh-1;y++)for(let x=1;x<w-1;x++){
+      const i=(y*w+x)*4;
+      for(let ch=0;ch<3;ch++){
+        const sharp=s[i+ch]*5-(s[i-4+ch]+s[i+4+ch]+s[i-w*4+ch]+s[i+w*4+ch]);
+        out[i+ch]=Math.max(0,Math.min(255,s[i+ch]*(1-a)+sharp*a));
+      }
+    }
+    ctx.putImageData(new ImageData(out,w,hh),0,0);
+  }
+
+  const im=await canvasToImage(c);
+  d.upscaled=im;d.upscaledCanvas=c;d.upscaleFactor=scale;
+  d.processed=null;d.processedCanvas=null;zipBlob=null;
+  return d
 }
 async function prepareDesign(d){
  // Preparing file does NOT upscale automatically.
@@ -1059,7 +1179,15 @@ async function buildZip(){
  zipBlob=await zip.generateAsync({type:"blob"})
 }
 async function downloadZip(){if(!zipBlob)await buildZip();if(!zipBlob)return;const a=document.createElement("a");a.href=URL.createObjectURL(zipBlob);a.download="PrintDesign_READY_TO_PRINT.zip";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function downloadSelected(){const d=designs.find(x=>x.id===selectedId);if(!d?.processedCanvas)return;const a=document.createElement("a");a.href=d.processedCanvas.toDataURL("image/png",1);a.download=(d.name.replace(/[^\w\-]+/g,"_")||"design")+"_READY.png";a.click()}
+async function downloadSelected(){
+  const d=designs.find(x=>x.id===selectedId);if(!d?.processedCanvas)return;
+  const base=(d.name.replace(/[^\w\-]+/g,"_")||"design");
+  const fmt=$("exportFormat")?.value||"png";
+  if(fmt==="pdf"){await downloadPrintMasterPdf(d);return}
+  if(fmt==="svg"){downloadPrintMasterSvg(d);return}
+  const blob=await new Promise(resolve=>d.processedCanvas.toBlob(resolve,"image/png",1));
+  downloadBlob(blob,base+"_READY.png");
+}
 function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("universalDesignFiles").value="";$("imageFiles").value="";universalDesignFiles=[];designImageFiles=[];$("importUniversalBtn").disabled=true;$("zipBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
 
 // ===================== PROJECT HISTORY =====================
