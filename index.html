@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PrintDesign AI Pro V7.1</title>
+<title>PrintDesign AI • SIMPLE PRINT MASTER V7.1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#070d1c">
 <link rel="apple-touch-icon" href="icon-192.svg">
@@ -78,19 +78,11 @@ display:grid;place-items:center;padding:14px;overflow:auto}
 <body>
 <div class="app">
  <div class="top">
-  <div class="brand"><div class="logo">✦</div><div><h1>PrintDesign AI Pro</h1><div class="sub">Advertising File Extractor • Auto Prepress • Ready-to-Print Engine</div></div></div>
-  <div class="badge">v7.1 UNIVERSAL IMPORT</div>
+  <div class="brand"><div class="logo">✦</div><div><h1>PrintDesign AI Pro</h1><div class="sub">Import → Cek → Proses Otomatis → Download Siap Cetak</div></div></div>
+  <div class="badge">v9 SIMPLE PRINT MASTER</div>
  </div>
 
- <div class="card" style="margin-bottom:18px">
-   <div class="actions" style="margin-top:0">
-     <button class="primary" onclick="openProjectModal()">💾 SIMPAN PROJECT</button>
-     <button onclick="openHistoryModal()">🕘 RIWAYAT FILE</button>
-     <button onclick="openDriveModal()">☁ GOOGLE DRIVE</button>
-     <button onclick="installPWA()" id="installBtn">📱 BUAT PINTASAN HP</button>
-   </div>
-   <div class="small" style="margin-top:8px">Project dapat disimpan/edit/hapus di perangkat. Google Drive tersedia setelah Client ID Google dikonfigurasi dan aplikasi di-host lewat HTTPS.</div>
- </div>
+
 
  <div class="grid">
   <div>
@@ -114,7 +106,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
    </div>
 
    <div class="card" style="margin-top:18px">
-    <div class="title">🧩 2. HASIL DETEKSI & PEMISAHAN</div>
+    <div class="title">🧩 2. HASIL FILE</div>
     <div class="mode-banner" id="modeInfo">Mode: <b>Belum ada file</b></div>
     <div class="metrics">
       <div class="metric"><div class="k">Desain Terdeteksi</div><div class="v" id="countDesign">0</div></div>
@@ -123,13 +115,11 @@ display:grid;place-items:center;padding:14px;overflow:auto}
     </div>
     <div id="gallery" class="gallery"></div>
     <div class="actions">
-      <button class="success" id="upscaleAllBtn" onclick="upscaleAll()" disabled>⬆ PERBESAR RESOLUSI SEMUA</button><button class="success" id="prepareAllBtn" onclick="prepareAll()" disabled>✓ SIAPKAN SEMUA FILE</button>
-      <button id="zipBtn" onclick="downloadZip()" disabled>⬇ Download Semua ZIP</button>
     </div>
    </div>
 
    <div class="card" style="margin-top:18px">
-    <div class="title">🎯 3. LOGO / GAMBAR TAMBAHAN</div>
+    <div class="title">🎯 3. LOGO / OVERLAY (OPSIONAL)</div>
     <div class="mode-banner">Pilih overlay di sini, lalu <b>geser dan ubah ukuran langsung di Preview Desain Terpilih</b>. Posisi yang Anda atur diterapkan sama ke semua desain.</div>
     <div class="form-grid">
       <div class="field"><label>Overlay Aktif</label><select id="overlaySelect"><option value="">Belum ada overlay</option></select></div>
@@ -213,10 +203,9 @@ display:grid;place-items:center;padding:14px;overflow:auto}
       <div class="field"><label>Export Master</label><select id="exportFormat">
         <option value="png" selected>PNG — Print Master</option>
         <option value="pdf">PDF — Print Master</option>
-        <option value="svg">SVG — embed raster (bukan vector murni)</option>
       </select></div>
     </div>
-    <div class="note">Mode baru: PDF dirender pada PPI tinggi sehingga teks/garis vektor dari PDF tidak cepat pecah saat dirasterisasi. Untuk JPG/PNG/WEBP, aplikasi meningkatkan pixel sampai target cetak lalu melakukan sharpening ringan. <b>Catatan penting:</b> upscale tidak dapat menciptakan detail asli yang memang tidak ada. SVG hasil export berisi gambar raster di dalam SVG, jadi bukan vector murni.</div>
+    <div class="note">Aplikasi otomatis memilih proses terbaik: PDF dirender pada PPI tinggi; JPG/JPEG/PNG/WEBP/SVG diperbesar sesuai target cetak lalu diberi sharpening ringan. <b>Catatan:</b> upscale tidak dapat menciptakan detail yang memang tidak ada pada file sumber.</div>
    </div>
 
    <div id="contentDesignCard" class="card hidden" style="margin-top:18px">
@@ -227,7 +216,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
 
   <div>
    <div class="card">
-    <div class="title">👁 PREVIEW SEMUA DESAIN</div>
+    <div class="title">👁 4. PREVIEW & PROSES</div>
     <div class="mode-banner">Semua desain hasil ekstraksi ditampilkan sekaligus. <b>Centang file</b> yang ingin diproses bersamaan. Klik desain untuk menjadikannya desain aktif.</div>
     <div class="selection-toolbar">
       <div class="selection-count">Dipilih: <b id="selectedCount">0</b> file</div>
@@ -238,21 +227,18 @@ display:grid;place-items:center;padding:14px;overflow:auto}
     </div>
     <div id="multiPreview" class="multi-preview"></div>
     <div class="bulk-selected-panel">
-      <div class="small" style="font-weight:850;color:#dce6f5;margin-bottom:8px">PROSES FILE TERPILIH</div>
+      <div class="small" style="font-weight:850;color:#dce6f5;margin-bottom:8px">PROSES SIAP CETAK</div>
       <div class="actions" style="margin-top:0">
-        <button class="success" id="repairSelectedBtn" onclick="repairSelectedFiles()" disabled>✦ PERBAIKI KUALITAS</button>
-        <button class="success" id="upscaleSelectedBtn" onclick="upscaleSelectedFiles()" disabled>⬆ PERBESAR RESOLUSI</button>
-        <button class="success" id="prepareSelectedBtn" onclick="prepareSelectedFiles()" disabled>✓ SIAPKAN FILE</button>
-        <button id="downloadSelectedZipBtn" onclick="downloadSelectedZip()" disabled>⬇ DOWNLOAD TERPILIH (ZIP)</button>
+        <button class="success" id="processSelectedBtn" onclick="processSelectedFiles()" disabled>⚡ PROSES SIAP CETAK</button>
+        <button id="downloadSelectedZipBtn" onclick="downloadSelectedZip()" disabled>⬇ DOWNLOAD TERPILIH</button>
       </div>
-      <div class="small" style="margin-top:8px">Semua proses hanya berlaku pada file yang dicentang.</div>
+      <div class="small" style="margin-top:8px">Satu tombol melakukan upscale + sharpening + overlay + finalisasi. Centang beberapa file untuk memproses sekaligus.</div>
     </div>
-    <div class="note">Pada desain aktif: <b>geser logo</b> untuk posisi, tarik <b>titik kuning</b> untuk ukuran, dan tarik <b>titik biru ↻</b> untuk rotasi. Saat file diproses, <b>rasio, komposisi, posisi logo, dan isi desain tidak akan diubah</b>.</div>
+    <div class="note">Pada desain aktif: <b>geser logo</b> untuk posisi, tarik <b>titik kuning</b> untuk ukuran, dan tarik <b>titik biru ↻</b> untuk rotasi.</div>Pada desain aktif: <b>geser logo</b> untuk posisi, tarik <b>titik kuning</b> untuk ukuran, dan tarik <b>titik biru ↻</b> untuk rotasi. Saat file diproses, <b>rasio, komposisi, posisi logo, dan isi desain tidak akan diubah</b>.</div>
     <div class="actions">
       <button class="primary" id="editLogoBtn" onclick="openLogoEditor()" disabled>✥ ATUR LOGO / GAMBAR</button>
-      <button class="success" id="upscaleOneBtn" onclick="upscaleSelected()" disabled>⬆ PERBESAR RESOLUSI</button>
-      <button class="success" id="prepareOneBtn" onclick="prepareSelected()" disabled>✓ SIAPKAN FILE</button>
-      <button id="downloadOneBtn" onclick="downloadSelected()" disabled>⬇ Download File Aktif</button>
+      <button class="success" id="processOneBtn" onclick="processSelectedFile()" disabled>⚡ PROSES FILE AKTIF</button>
+      <button id="downloadOneBtn" onclick="downloadSelected()" disabled>⬇ DOWNLOAD</button>
     </div>
    </div>
 
@@ -414,7 +400,7 @@ function addOverlayImage(file){
 
 function invalidateProcessed(){
  designs.forEach(d=>{d.processed=null;d.processedCanvas=null});
- zipBlob=null;$("zipBtn").disabled=true;updateUI()
+ zipBlob=null;updateUI()
 }
 
 function renderOverlayGallery(){
@@ -880,7 +866,7 @@ function updateUI(){
  $("countDesign").textContent=designs.length;$("countExtra").textContent=overlays.length+extras.length;$("detectStatus").textContent=designs.length?"TERPISAH ✓":"—";
  $("modeInfo").innerHTML=designs.length?`Mode: <b>FILE READY MODE</b> — desain tidak diubah; overlay tambahan diterapkan seragam ke semua desain. Proses siap cetak mempertahankan rasio, komposisi, dan posisi overlay persis seperti preview.`:`Mode: <b>Belum ada file</b>`;
  $("contentDesignCard").classList.toggle("hidden",designs.length>0);
- $("upscaleAllBtn").disabled=!designs.length;$("prepareAllBtn").disabled=!designs.length;
+ if($("processSelectedBtn"))$("processSelectedBtn").disabled=!selectedDesignIds.size;
  const g=$("gallery");g.innerHTML="";
  designs.forEach((d,i)=>{
    const div=document.createElement("div");div.className="item"+(d.id===selectedId?" active":"");div.onclick=()=>selectDesign(d.id);
@@ -910,8 +896,10 @@ function refreshSelected(){
  }else{
    $("rReady").textContent="BELUM DIPROSES";$("rReady").style.color="var(--warn)";
  }
- $("upscaleOneBtn").disabled=false;$("prepareOneBtn").disabled=false;$("downloadOneBtn").disabled=!d.processed;$("editLogoBtn").disabled=!activeOverlay();
-  if($("vectorizeOneBtn"))$("vectorizeOneBtn").disabled=false;
+ if($("processOneBtn"))$("processOneBtn").disabled=false;
+ if($("downloadOneBtn"))$("downloadOneBtn").disabled=!d.processed;
+ if($("editLogoBtn"))$("editLogoBtn").disabled=!activeOverlay();
+ if($("rPdfMode"))$("rPdfMode").textContent=d.source?.includes("PDF")?`${selectedPdfRenderPpi()} PPI`:"Tidak relevan";
   if($("rPdfMode"))$("rPdfMode").textContent=d.source?.includes("PDF")?`${selectedPdfRenderPpi()} PPI`: "Tidak relevan"
 }
 function drawPreview(img){
@@ -936,10 +924,10 @@ function getSelectedDesigns(){
 function updateSelectionUI(){
  const n=selectedDesignIds.size;
  if($("selectedCount"))$("selectedCount").textContent=n;
- ["repairSelectedBtn","upscaleSelectedBtn","prepareSelectedBtn","vectorizeSelectedBtn"].forEach(id=>{if($(id))$(id).disabled=n===0});
+ if($("processSelectedBtn"))$("processSelectedBtn").disabled=n===0;
  if($("downloadSelectedZipBtn")){
-   const ready=getSelectedDesigns().some(d=>d.processedCanvas);
-   $("downloadSelectedZipBtn").disabled=n===0||!ready
+  const ready=getSelectedDesigns().some(d=>d.processedCanvas);
+  $("downloadSelectedZipBtn").disabled=n===0||!ready;
  }
 }
 
@@ -1022,8 +1010,11 @@ function refreshAllNonActivePreviewOverlays(){
 }
 function drawEmpty(){
  const wrap=$("multiPreview");if(wrap)wrap.innerHTML='<div class="status"><div class="small">Belum ada desain. Import PDF atau gambar terlebih dahulu.</div></div>';
- ["rName","rSource","rTarget","rPpi","rPixel","rUpscale","rQuality","rUpscaleStatus","rReady","rPdfMode"].forEach(id=>$(id).textContent="—");
-  ["vectorizeOneBtn","vectorizeSelectedBtn"].forEach(id=>{if($(id))$(id).disabled=true})
+ ["rName","rSource","rTarget","rPpi","rPixel","rUpscale","rQuality","rUpscaleStatus","rReady","rPdfMode"].forEach(id=>{if($(id))$(id).textContent="—"});
+  if($("processOneBtn"))$("processOneBtn").disabled=true;
+  if($("downloadOneBtn"))$("downloadOneBtn").disabled=true;
+  if($("processSelectedBtn"))$("processSelectedBtn").disabled=true;
+  if($("editLogoBtn"))$("editLogoBtn").disabled=true;
 }
 
 async function repairDesignQuality(d){
@@ -1050,24 +1041,41 @@ async function repairDesignQuality(d){
  d.upscaled=im;d.repaired=true;d.processed=null;d.processedCanvas=null;zipBlob=null;
  return d
 }
-async function repairSelectedFiles(){
+async function processSelectedFiles(){
  const arr=getSelectedDesigns();if(!arr.length)return;
- $("repairSelectedBtn").disabled=true;setProgress(5);
- for(let i=0;i<arr.length;i++){await repairDesignQuality(arr[i]);setProgress(Math.round(((i+1)/arr.length)*95));updateUI()}
- setProgress(100);$("repairSelectedBtn").disabled=false;refreshSelected();updateSelectionUI()
+ const btn=$("processSelectedBtn");if(btn)btn.disabled=true;setProgress(5);
+ try{
+  for(let i=0;i<arr.length;i++){
+   await upscaleDesign(arr[i]);
+   await prepareDesign(arr[i]);
+   setProgress(Math.round(((i+1)/arr.length)*95));updateUI();
+  }
+  setProgress(100);refreshSelected();updateSelectionUI();
+ }catch(e){
+  console.error(e);
+  alert("Proses file gagal: "+(e.message||e));
+ }finally{
+  if(btn)btn.disabled=false;
+  updateSelectionUI();
+ }
 }
-async function upscaleSelectedFiles(){
- const arr=getSelectedDesigns();if(!arr.length)return;
- $("upscaleSelectedBtn").disabled=true;setProgress(5);
- for(let i=0;i<arr.length;i++){await upscaleDesign(arr[i]);setProgress(Math.round(((i+1)/arr.length)*95));updateUI()}
- setProgress(100);$("upscaleSelectedBtn").disabled=false;refreshSelected();updateSelectionUI()
+async function processSelectedFile(){
+ const d=designs.find(x=>x.id===selectedId);if(!d)return;
+ const btn=$("processOneBtn");if(btn)btn.disabled=true;setProgress(10);
+ try{
+  await upscaleDesign(d);
+  setProgress(65);
+  await prepareDesign(d);
+  setProgress(100);
+  updateUI();refreshSelected();updateSelectionUI();
+ }catch(e){
+  console.error(e);
+  alert("Proses file gagal: "+(e.message||e));
+ }finally{
+  if(btn)btn.disabled=false;
+ }
 }
-async function prepareSelectedFiles(){
- const arr=getSelectedDesigns();if(!arr.length)return;
- $("prepareSelectedBtn").disabled=true;setProgress(5);
- for(let i=0;i<arr.length;i++){await prepareDesign(arr[i]);setProgress(Math.round(((i+1)/arr.length)*90));updateUI()}
- setProgress(100);$("prepareSelectedBtn").disabled=false;refreshSelected();updateSelectionUI()
-}
+
 async function downloadSelectedZip(){
  const arr=getSelectedDesigns().filter(d=>d.processedCanvas);
  if(!arr.length)return;
@@ -1083,14 +1091,6 @@ async function downloadSelectedZip(){
  setTimeout(()=>URL.revokeObjectURL(a.href),1200)
 }
 
-async function upscaleSelected(){
- const d=designs.find(x=>x.id===selectedId);if(!d)return;
- await upscaleDesign(d);updateUI();refreshSelected()
-}
-async function prepareSelected(){
- const d=designs.find(x=>x.id===selectedId);if(!d)return;
- await prepareDesign(d);updateUI();refreshSelected()
-}
 async function upscaleDesign(d){
   const t=targetPx();
   const src=d.upscaled||d.img;
@@ -1156,22 +1156,8 @@ async function prepareDesign(d){
  d.outputW=srcW;d.outputH=srcH;d.safeProcessed=true;
  return d
 }
-async function upscaleAll(){
- if(!designs.length)return;$("upscaleAllBtn").disabled=true;setProgress(5);
- for(let i=0;i<designs.length;i++){
-   await upscaleDesign(designs[i]);
-   setProgress(Math.round(((i+1)/designs.length)*95));updateUI()
- }
- setProgress(100);$("upscaleAllBtn").disabled=false;refreshSelected()
-}
-async function prepareAll(){
- if(!designs.length)return;$("prepareAllBtn").disabled=true;setProgress(5);
- for(let i=0;i<designs.length;i++){
-   await prepareDesign(designs[i]);
-   setProgress(Math.round(((i+1)/designs.length)*90));updateUI()
- }
- await buildZip();setProgress(100);$("prepareAllBtn").disabled=false;$("zipBtn").disabled=false;refreshSelected()
-}
+async function upscaleAll(){return processSelectedFiles()}
+async function prepareAll(){return processSelectedFiles()}
 function dataUrlToBlob(dataUrl){const [head,data]=dataUrl.split(","),mime=head.match(/:(.*?);/)[1],bin=atob(data);let arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime})}
 async function buildZip(){
  if(!window.JSZip)return;const zip=new JSZip();
@@ -1180,15 +1166,14 @@ async function buildZip(){
 }
 async function downloadZip(){if(!zipBlob)await buildZip();if(!zipBlob)return;const a=document.createElement("a");a.href=URL.createObjectURL(zipBlob);a.download="PrintDesign_READY_TO_PRINT.zip";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 async function downloadSelected(){
-  const d=designs.find(x=>x.id===selectedId);if(!d?.processedCanvas)return;
-  const base=(d.name.replace(/[^\w\-]+/g,"_")||"design");
-  const fmt=$("exportFormat")?.value||"png";
-  if(fmt==="pdf"){await downloadPrintMasterPdf(d);return}
-  if(fmt==="svg"){downloadPrintMasterSvg(d);return}
-  const blob=await new Promise(resolve=>d.processedCanvas.toBlob(resolve,"image/png",1));
-  downloadBlob(blob,base+"_READY.png");
+ const d=designs.find(x=>x.id===selectedId);if(!d?.processedCanvas)return;
+ const base=(d.name.replace(/[^\w\-]+/g,"_")||"design");
+ const fmt=$("exportFormat")?.value||"png";
+ if(fmt==="pdf"){await downloadPrintMasterPdf(d);return}
+ const blob=await new Promise(resolve=>d.processedCanvas.toBlob(resolve,"image/png",1));
+ downloadBlob(blob,base+"_READY.png");
 }
-function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("universalDesignFiles").value="";$("imageFiles").value="";universalDesignFiles=[];designImageFiles=[];$("importUniversalBtn").disabled=true;$("zipBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
+function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("universalDesignFiles").value="";$("imageFiles").value="";universalDesignFiles=[];designImageFiles=[];$("importUniversalBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
 
 // ===================== PROJECT HISTORY =====================
 function getHistory(){try{return JSON.parse(localStorage.getItem("pdai_history")||"[]")}catch(e){return[]}}
