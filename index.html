@@ -598,78 +598,130 @@ async function importDesignImages(){
  updateUI();if(designs.length)selectDesign(designs[designs.length-1].id);setProgress(100);
 }
 
-async function readPdf(){
- if(!pdfFile)return;
- if(!window.pdfjsLib){$("importStatus").className="status bad";$("importStatus").innerHTML="<b>PDF engine belum termuat.</b><div class='small'>Perangkat perlu internet saat membuka aplikasi agar PDF.js termuat.</div>";return}
- try{
-  setProgress(5);$("readPdfBtn").disabled=true;zipBlob=null;
-  const data=await pdfFile.arrayBuffer();
-  const pdf=await pdfjsLib.getDocument({data}).promise;
-  let found=[];
-  for(let pno=1;pno<=pdf.numPages;pno++){
-    const page=await pdf.getPage(pno);
-    // render once so page image objects are resolved
-    const vp=page.getViewport({scale:1.2});
-    const temp=document.createElement("canvas");temp.width=Math.round(vp.width);temp.height=Math.round(vp.height);
-    await page.render({canvasContext:temp.getContext("2d"),viewport:vp}).promise;
-    const op=await page.getOperatorList();
-    let ids=[];
-    for(let i=0;i<op.fnArray.length;i++){
-      const fn=op.fnArray[i];
-      if(fn===pdfjsLib.OPS.paintImageXObject || fn===pdfjsLib.OPS.paintJpegXObject){
-        const objId=op.argsArray[i]?.[0];
-        if(objId && !ids.includes(objId))ids.push(objId);
-      }
-    }
-    let pageImgs=[];
-    for(const objId of ids){
-      const obj=await getPdfObj(page,objId);
-      const canvas=pdfObjToCanvas(obj);
-      if(canvas)pageImgs.push({objId,canvas,w:canvas.width,h:canvas.height,area:canvas.width*canvas.height});
-    }
-    if(pageImgs.length){
-      const maxArea=Math.max(...pageImgs.map(x=>x.area));
-      const mains=pageImgs.filter(x=>x.area>=maxArea*.22 && x.w>=350 && x.h>=350);
-      const smalls=pageImgs.filter(x=>!mains.includes(x));
-      if(mains.length>=2){
-        for(let i=0;i<mains.length;i++){
-          const im=await canvasToImage(mains[i].canvas);
-          found.push({id:"pdf-"+pno+"-"+i+"-"+crypto.randomUUID(),name:`Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,img:im,w:im.naturalWidth,h:im.naturalHeight,source:"PDF Object",processed:null,upscaled:null});
+async function readPdf(append=true){
+  if(!pdfFile)return;
+  if(!window.pdfjsLib){
+    $("importStatus").className="status bad";
+    $("importStatus").innerHTML="<b>PDF engine belum termuat.</b><div class='small'>Pastikan koneksi internet aktif saat aplikasi pertama kali dibuka agar PDF.js termuat.</div>";
+    return;
+  }
+
+  try{
+    const data=await pdfFile.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data}).promise;
+    let found=[];
+    const extraBefore=extras.length;
+
+    for(let pno=1;pno<=pdf.numPages;pno++){
+      const page=await pdf.getPage(pno);
+      const vp=page.getViewport({scale:1.2});
+      const temp=document.createElement("canvas");
+      temp.width=Math.round(vp.width);
+      temp.height=Math.round(vp.height);
+
+      await page.render({
+        canvasContext:temp.getContext("2d"),
+        viewport:vp
+      }).promise;
+
+      const op=await page.getOperatorList();
+      let ids=[];
+
+      for(let i=0;i<op.fnArray.length;i++){
+        const fn=op.fnArray[i];
+        if(fn===pdfjsLib.OPS.paintImageXObject || fn===pdfjsLib.OPS.paintJpegXObject){
+          const objId=op.argsArray[i]?.[0];
+          if(objId && !ids.includes(objId))ids.push(objId);
         }
-        extras.push(...smalls.map((x,i)=>({name:`Asset kecil H${pno}-${i+1}`,w:x.w,h:x.h})));
-      } else {
-        // Fallback: split rendered page as grid if embedded objects are not separated.
+      }
+
+      let pageImgs=[];
+      for(const objId of ids){
+        const obj=await getPdfObj(page,objId);
+        const canvas=pdfObjToCanvas(obj);
+        if(canvas)pageImgs.push({
+          objId,canvas,w:canvas.width,h:canvas.height,area:canvas.width*canvas.height
+        });
+      }
+
+      if(pageImgs.length){
+        const maxArea=Math.max(...pageImgs.map(x=>x.area));
+        const mains=pageImgs.filter(x=>x.area>=maxArea*.22 && x.w>=350 && x.h>=350);
+        const smalls=pageImgs.filter(x=>!mains.includes(x));
+
+        if(mains.length>=2){
+          for(let i=0;i<mains.length;i++){
+            const im=await canvasToImage(mains[i].canvas);
+            found.push({
+              id:"pdf-"+pno+"-"+i+"-"+crypto.randomUUID(),
+              name:`${pdfFile.name} • Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,
+              img:im,w:im.naturalWidth,h:im.naturalHeight,
+              source:"PDF Object",processed:null,upscaled:null
+            });
+          }
+          extras.push(...smalls.map((x,i)=>({
+            name:`Asset kecil ${pdfFile.name} H${pno}-${i+1}`,
+            w:x.w,h:x.h
+          })));
+        }else{
+          const crops=autoGridSplit(temp);
+          for(let i=0;i<crops.length;i++){
+            const im=await canvasToImage(crops[i]);
+            found.push({
+              id:"grid-"+pno+"-"+i+"-"+crypto.randomUUID(),
+              name:`${pdfFile.name} • Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,
+              img:im,w:im.naturalWidth,h:im.naturalHeight,
+              source:"PDF Auto Split",processed:null,upscaled:null
+            });
+          }
+        }
+      }else{
         const crops=autoGridSplit(temp);
         for(let i=0;i<crops.length;i++){
           const im=await canvasToImage(crops[i]);
-          found.push({id:"grid-"+pno+"-"+i+"-"+crypto.randomUUID(),name:`Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,img:im,w:im.naturalWidth,h:im.naturalHeight,source:"PDF Auto Split",processed:null,upscaled:null});
+          found.push({
+            id:"grid-"+pno+"-"+i+"-"+crypto.randomUUID(),
+            name:`${pdfFile.name} • Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,
+            img:im,w:im.naturalWidth,h:im.naturalHeight,
+            source:"PDF Auto Split",processed:null,upscaled:null
+          });
         }
       }
-    }else{
-      const crops=autoGridSplit(temp);
-      for(let i=0;i<crops.length;i++){
-        const im=await canvasToImage(crops[i]);
-        found.push({id:"grid-"+pno+"-"+i+"-"+crypto.randomUUID(),name:`Sign ${String(found.length+1).padStart(2,"0")} • Hal ${pno}`,img:im,w:im.naturalWidth,h:im.naturalHeight,source:"PDF Auto Split",processed:null,upscaled:null});
-      }
+
+      setProgress(Math.round((pno/pdf.numPages)*90));
     }
-    setProgress(Math.round((pno/pdf.numPages)*90));
+
+    if(append){
+      designs.push(...found);
+      found.forEach(d=>selectedDesignIds.add(d.id));
+    }else{
+      designs=found;
+      selectedDesignIds=new Set(designs.map(d=>d.id));
+    }
+
+    updateUI();
+
+    if(designs.length){
+      selectDesign(found.length ? found[0].id : designs[0].id);
+    }
+
+    const added=found.length;
+    const extraAdded=extras.length-extraBefore;
+    $("importStatus").className="status good";
+    $("importStatus").innerHTML=
+      `<b>BERHASIL: ${added} desain dari ${esc(pdfFile.name)} ✓</b>
+       <div class="small">Total desain saat ini: ${designs.length}. Asset kecil: ${extraAdded}. Semua file yang dipilih digabung, tidak saling menimpa.</div>`;
+
+    setProgress(100);
+  }catch(err){
+    console.error("Gagal membaca PDF:",err);
+    $("importStatus").className="status bad";
+    $("importStatus").innerHTML=
+      `<b>Gagal membaca PDF: ${esc(pdfFile.name)}</b>
+       <div class="small">${esc(err.message||String(err))}</div>`;
   }
-  if(append){
-    designs.push(...found);
-    found.forEach(d=>selectedDesignIds.add(d.id));
-  }else{
-    designs=found;
-    selectedDesignIds=new Set(designs.map(d=>d.id));
-  }
-  updateUI();
-  if(designs.length)selectDesign(designs[0].id);
-  $("importStatus").className="status good";
-  $("importStatus").innerHTML=`<b>BERHASIL: ${designs.length} desain/sign terdeteksi ✓</b><div class="small">${pdfs.length} PDF + ${imgs.length} gambar diproses. Semua file yang dipilih digabung ke daftar desain. ${extras.length} asset kecil bawaan PDF diabaikan dari daftar desain utama. ${overlays.length} overlay tambahan tersedia.</div>`;
-  setProgress(100);
- }catch(err){
-  $("importStatus").className="status bad";$("importStatus").innerHTML=`<b>Gagal membaca PDF.</b><div class="small">${esc(err.message||String(err))}</div>`
- }finally{$("readPdfBtn").disabled=!pdfFile}
 }
+
 function getPdfObj(page,id){
  return new Promise(resolve=>{
    try{
