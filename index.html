@@ -97,7 +97,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
    <div class="card">
     <div class="title">📂 1. IMPORT FILE / GAMBAR</div>
     <div class="form-grid">
-      <div class="field" style="grid-column:1/-1"><label>IMPORT DESAIN — PDF / JPG / JPEG / PNG / WEBP / SVG</label><input id="universalDesignFiles" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.svg,application/pdf,image/jpeg,image/png,image/webp,image/svg+xml" multiple></div>
+      <div class="field" style="grid-column:1/-1"><label>IMPORT DESAIN — PDF / JPG / JPEG / PNG / WEBP / SVG</label><input id="universalDesignFiles" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.svg,application/pdf,image/jpeg,image/png,image/webp,image/svg+xml,image/*" multiple></div>
       <div class="field" style="grid-column:1/-1"><label>Tambah Gambar / Logo Overlay</label><input id="imageFiles" type="file" accept=".jpg,.jpeg,.png,.webp,.svg,image/*" multiple></div>
     </div>
     <div class="actions">
@@ -105,7 +105,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
       <button onclick="clearAll()">Hapus Semua</button>
     </div>
     <div class="progress" id="progress"><div></div></div>
-    <div id="importStatus" class="status"><div class="small">PDF akan dipisahkan menjadi desain satuan. Gambar/desain dapat di-import langsung sebagai file desain. Gambar/logo tambahan tetap masuk ke panel Overlay.</div></div>
+    <div id="importStatus" class="status"><div class="small">Bisa pilih beberapa file sekaligus: PDF, JPG, JPEG, PNG, WEBP, dan SVG. PDF dipisahkan menjadi desain per halaman/objek, sedangkan gambar masuk sebagai desain satuan. Gambar/logo tambahan tetap masuk ke panel Overlay.</div></div>
 
     <div id="overlayImportArea" style="margin-top:16px">
       <div class="small" style="font-weight:800;color:#dbe6f5">Gambar / Logo Tambahan</div>
@@ -369,7 +369,7 @@ const rules={
  "anodized":{ppi:300},"panel-label":{ppi:300},"asset-tag":{ppi:300},"custom":{ppi:300}
 };
 
-$("universalDesignFiles").addEventListener("change",e=>{universalDesignFiles=[...e.target.files];$("importUniversalBtn").disabled=!universalDesignFiles.length;if(universalDesignFiles.length){$("importStatus").className="status";$("importStatus").innerHTML=`<b>${universalDesignFiles.length} file desain dipilih.</b><div class="small">PDF dipisahkan per halaman; JPG/PNG/WEBP/SVG masuk sebagai desain satuan.</div>`}});
+$("universalDesignFiles").addEventListener("change",e=>{universalDesignFiles=[...e.target.files];$("importUniversalBtn").disabled=!universalDesignFiles.length;if(universalDesignFiles.length){$("importStatus").className="status";$("importStatus").innerHTML=`<b>${universalDesignFiles.length} file dipilih.</b><div class="small">Semua PDF, JPG, JPEG, PNG, WEBP, dan SVG akan diproses. Beberapa file dapat dipilih sekaligus.</div>`}});
 $("imageFiles").addEventListener("change",e=>{[...e.target.files].forEach(addOverlayImage);e.target.value=""});
 $("qualityMode").addEventListener("change",()=>{$("manualPpi").disabled=$("qualityMode").value!=="manual";refreshSelected()});
 $("overlaySelect").addEventListener("change",()=>{activeOverlayId=$("overlaySelect").value||null;invalidateProcessed();renderOverlayGallery();refreshSelected();renderAllPreviews()});
@@ -564,7 +564,7 @@ async function importUniversalDesigns(){
  const files=universalDesignFiles||[];if(!files.length)return;
  $("importUniversalBtn").disabled=true;setProgress(5);
  const pdfs=files.filter(f=>f.type==='application/pdf'||/\.pdf$/i.test(f.name));
- const imgs=files.filter(f=>f.type.startsWith('image/')||/\.(jpg|jpeg|png|webp|svg)$/i.test(f.name));
+ const imgs=files.filter(f=>/^image\//i.test(f.type)||/\.(jpg|jpeg|png|webp|svg)$/i.test(f.name));
  for(let i=0;i<imgs.length;i++){
   const file=imgs[i];
   try{const url=URL.createObjectURL(file);const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});
@@ -574,7 +574,7 @@ async function importUniversalDesigns(){
   setProgress(10+Math.round(((i+1)/Math.max(1,imgs.length))*45));
  }
  for(let i=0;i<pdfs.length;i++){
-  pdfFile=pdfs[i];await readPdf();setProgress(55+Math.round(((i+1)/Math.max(1,pdfs.length))*40));
+  pdfFile=pdfs[i];await readPdf(true);setProgress(55+Math.round(((i+1)/Math.max(1,pdfs.length))*40));
  }
  universalDesignFiles=[];$("universalDesignFiles").value="";updateUI();if(designs.length)selectDesign(designs[0].id);setProgress(100);$("importUniversalBtn").disabled=false;
 }
@@ -602,7 +602,7 @@ async function readPdf(){
  if(!pdfFile)return;
  if(!window.pdfjsLib){$("importStatus").className="status bad";$("importStatus").innerHTML="<b>PDF engine belum termuat.</b><div class='small'>Perangkat perlu internet saat membuka aplikasi agar PDF.js termuat.</div>";return}
  try{
-  setProgress(5);$("readPdfBtn").disabled=true;designs=[];extras=[];selectedId=null;zipBlob=null;
+  setProgress(5);$("readPdfBtn").disabled=true;zipBlob=null;
   const data=await pdfFile.arrayBuffer();
   const pdf=await pdfjsLib.getDocument({data}).promise;
   let found=[];
@@ -654,9 +654,17 @@ async function readPdf(){
     }
     setProgress(Math.round((pno/pdf.numPages)*90));
   }
-  designs=found;selectedDesignIds=new Set(designs.map(d=>d.id));updateUI();if(designs.length)selectDesign(designs[0].id);
+  if(append){
+    designs.push(...found);
+    found.forEach(d=>selectedDesignIds.add(d.id));
+  }else{
+    designs=found;
+    selectedDesignIds=new Set(designs.map(d=>d.id));
+  }
+  updateUI();
+  if(designs.length)selectDesign(designs[0].id);
   $("importStatus").className="status good";
-  $("importStatus").innerHTML=`<b>BERHASIL: ${designs.length} desain/sign terdeteksi dan dipisahkan ✓</b><div class="small">${extras.length} asset kecil bawaan PDF diabaikan dari daftar desain utama. ${overlays.length} overlay tambahan tersedia untuk diterapkan seragam.</div>`;
+  $("importStatus").innerHTML=`<b>BERHASIL: ${designs.length} desain/sign terdeteksi ✓</b><div class="small">${pdfs.length} PDF + ${imgs.length} gambar diproses. Semua file yang dipilih digabung ke daftar desain. ${extras.length} asset kecil bawaan PDF diabaikan dari daftar desain utama. ${overlays.length} overlay tambahan tersedia.</div>`;
   setProgress(100);
  }catch(err){
   $("importStatus").className="status bad";$("importStatus").innerHTML=`<b>Gagal membaca PDF.</b><div class="small">${esc(err.message||String(err))}</div>`
