@@ -98,14 +98,16 @@ display:grid;place-items:center;padding:14px;overflow:auto}
     <div class="title">📂 1. IMPORT FILE / GAMBAR</div>
     <div class="form-grid">
       <div class="field"><label>Import PDF Desain</label><input id="pdfFile" type="file" accept="application/pdf"></div>
+      <div class="field"><label>Import Gambar / Desain</label><input id="designImageFiles" type="file" accept="image/*,.svg" multiple></div>
       <div class="field"><label>Tambah Gambar / Logo Overlay</label><input id="imageFiles" type="file" accept="image/*" multiple></div>
     </div>
     <div class="actions">
       <button class="primary" id="readPdfBtn" onclick="readPdf()" disabled>🔍 BACA & PISAHKAN PDF</button>
+      <button class="primary" id="importImagesBtn" onclick="importDesignImages()" disabled>🖼 IMPORT GAMBAR DESAIN</button>
       <button onclick="clearAll()">Hapus Semua</button>
     </div>
     <div class="progress" id="progress"><div></div></div>
-    <div id="importStatus" class="status"><div class="small">PDF akan dipisahkan menjadi desain satuan. Gambar/logo tambahan akan masuk ke panel Overlay dan ditampilkan di preview.</div></div>
+    <div id="importStatus" class="status"><div class="small">PDF akan dipisahkan menjadi desain satuan. Gambar/desain dapat di-import langsung sebagai file desain. Gambar/logo tambahan tetap masuk ke panel Overlay.</div></div>
 
     <div id="overlayImportArea" style="margin-top:16px">
       <div class="small" style="font-weight:800;color:#dbe6f5">Gambar / Logo Tambahan</div>
@@ -359,7 +361,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
 const $=id=>document.getElementById(id);
 if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-let pdfFile=null, designs=[], extras=[], selectedId=null, zipBlob=null, overlays=[], activeOverlayId=null, selectedDesignIds=new Set();
+let pdfFile=null, designs=[], extras=[], selectedId=null, zipBlob=null, overlays=[], activeOverlayId=null, selectedDesignIds=new Set(), designImageFiles=[];
 const rules={
  "business-card":{ppi:300},"flyer":{ppi:300},"catalog":{ppi:300},"booklet":{ppi:300},"calendar":{ppi:300},
  "packaging":{ppi:300},"label":{ppi:300},"sticker":{ppi:300},"banner":{ppi:150},"backdrop":{ppi:120},
@@ -370,6 +372,7 @@ const rules={
 };
 
 $("pdfFile").addEventListener("change",e=>{pdfFile=e.target.files[0]||null;$("readPdfBtn").disabled=!pdfFile;if(pdfFile){$("importStatus").className="status";$("importStatus").innerHTML=`<b>PDF dipilih:</b> ${esc(pdfFile.name)}<div class="small">Klik “BACA & PISAHKAN PDF”.</div>`}});
+$("designImageFiles").addEventListener("change",e=>{designImageFiles=[...e.target.files];$("importImagesBtn").disabled=!designImageFiles.length;if(designImageFiles.length){$("importStatus").className="status";$("importStatus").innerHTML=`<b>${designImageFiles.length} gambar desain dipilih.</b><div class="small">Klik “IMPORT GAMBAR DESAIN”.</div>`}});
 $("imageFiles").addEventListener("change",e=>{[...e.target.files].forEach(addOverlayImage);e.target.value=""});
 $("qualityMode").addEventListener("change",()=>{$("manualPpi").disabled=$("qualityMode").value!=="manual";refreshSelected()});
 $("overlaySelect").addEventListener("change",()=>{activeOverlayId=$("overlaySelect").value||null;invalidateProcessed();renderOverlayGallery();refreshSelected();renderAllPreviews()});
@@ -559,6 +562,25 @@ function rotateOverlay(delta){
 }
 function setRotation(a){$("overlayRot").value=a;syncEditorBox();invalidateProcessed();updateOverlayInfo()}
 window.addEventListener("resize",()=>{if(!$("logoEditorModal").classList.contains("hidden"))renderLogoEditor()});
+
+async function importDesignImages(){
+ const files=designImageFiles||[];if(!files.length)return;
+ $("importImagesBtn").disabled=true;setProgress(5);
+ for(let i=0;i<files.length;i++){
+   const file=files[i];
+   if(!file.type.startsWith("image/") && !/\.svg$/i.test(file.name))continue;
+   try{
+     const url=URL.createObjectURL(file);
+     const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});
+     const d={id:"img-design-"+crypto.randomUUID(),name:file.name,img,w:img.naturalWidth,h:img.naturalHeight,source:"Gambar Desain",processed:null,upscaled:null};
+     designs.push(d);selectedDesignIds.add(d.id);
+     URL.revokeObjectURL(url);
+   }catch(e){console.error(e)}
+   setProgress(Math.round(((i+1)/files.length)*95));
+ }
+ designImageFiles=[];$("designImageFiles").value="";
+ updateUI();if(designs.length)selectDesign(designs[designs.length-1].id);setProgress(100);
+}
 
 async function readPdf(){
  if(!pdfFile)return;
@@ -962,7 +984,7 @@ async function buildZip(){
 }
 async function downloadZip(){if(!zipBlob)await buildZip();if(!zipBlob)return;const a=document.createElement("a");a.href=URL.createObjectURL(zipBlob);a.download="PrintDesign_READY_TO_PRINT.zip";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function downloadSelected(){const d=designs.find(x=>x.id===selectedId);if(!d?.processedCanvas)return;const a=document.createElement("a");a.href=d.processedCanvas.toDataURL("image/png",1);a.download=(d.name.replace(/[^\w\-]+/g,"_")||"design")+"_READY.png";a.click()}
-function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("pdfFile").value="";$("imageFiles").value="";$("readPdfBtn").disabled=true;$("zipBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
+function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("pdfFile").value="";$("designImageFiles").value="";$("imageFiles").value="";designImageFiles=[];$("readPdfBtn").disabled=true;$("zipBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
 
 // ===================== PROJECT HISTORY =====================
 function getHistory(){try{return JSON.parse(localStorage.getItem("pdai_history")||"[]")}catch(e){return[]}}
