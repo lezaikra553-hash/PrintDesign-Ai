@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PrintDesign AI Pro V7</title>
+<title>PrintDesign AI Pro V7.1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#070d1c">
 <link rel="apple-touch-icon" href="icon-192.svg">
@@ -79,7 +79,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
 <div class="app">
  <div class="top">
   <div class="brand"><div class="logo">✦</div><div><h1>PrintDesign AI Pro</h1><div class="sub">Advertising File Extractor • Auto Prepress • Ready-to-Print Engine</div></div></div>
-  <div class="badge">v7.0 HISTORY • DRIVE • PWA</div>
+  <div class="badge">v7.1 UNIVERSAL IMPORT</div>
  </div>
 
  <div class="card" style="margin-bottom:18px">
@@ -97,13 +97,11 @@ display:grid;place-items:center;padding:14px;overflow:auto}
    <div class="card">
     <div class="title">📂 1. IMPORT FILE / GAMBAR</div>
     <div class="form-grid">
-      <div class="field"><label>Import PDF Desain</label><input id="pdfFile" type="file" accept="application/pdf"></div>
-      <div class="field"><label>Import Gambar / Desain</label><input id="designImageFiles" type="file" accept="image/*,.svg" multiple></div>
-      <div class="field"><label>Tambah Gambar / Logo Overlay</label><input id="imageFiles" type="file" accept="image/*" multiple></div>
+      <div class="field" style="grid-column:1/-1"><label>IMPORT DESAIN — PDF / JPG / JPEG / PNG / WEBP / SVG</label><input id="universalDesignFiles" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.svg,application/pdf,image/jpeg,image/png,image/webp,image/svg+xml" multiple></div>
+      <div class="field" style="grid-column:1/-1"><label>Tambah Gambar / Logo Overlay</label><input id="imageFiles" type="file" accept=".jpg,.jpeg,.png,.webp,.svg,image/*" multiple></div>
     </div>
     <div class="actions">
-      <button class="primary" id="readPdfBtn" onclick="readPdf()" disabled>🔍 BACA & PISAHKAN PDF</button>
-      <button class="primary" id="importImagesBtn" onclick="importDesignImages()" disabled>🖼 IMPORT GAMBAR DESAIN</button>
+      <button class="primary" id="importUniversalBtn" onclick="importUniversalDesigns()" disabled>📥 IMPORT DESAIN TERPILIH</button>
       <button onclick="clearAll()">Hapus Semua</button>
     </div>
     <div class="progress" id="progress"><div></div></div>
@@ -361,7 +359,7 @@ display:grid;place-items:center;padding:14px;overflow:auto}
 const $=id=>document.getElementById(id);
 if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-let pdfFile=null, designs=[], extras=[], selectedId=null, zipBlob=null, overlays=[], activeOverlayId=null, selectedDesignIds=new Set(), designImageFiles=[];
+let pdfFile=null, designs=[], extras=[], selectedId=null, zipBlob=null, overlays=[], activeOverlayId=null, selectedDesignIds=new Set(), designImageFiles=[], universalDesignFiles=[];
 const rules={
  "business-card":{ppi:300},"flyer":{ppi:300},"catalog":{ppi:300},"booklet":{ppi:300},"calendar":{ppi:300},
  "packaging":{ppi:300},"label":{ppi:300},"sticker":{ppi:300},"banner":{ppi:150},"backdrop":{ppi:120},
@@ -371,8 +369,7 @@ const rules={
  "anodized":{ppi:300},"panel-label":{ppi:300},"asset-tag":{ppi:300},"custom":{ppi:300}
 };
 
-$("pdfFile").addEventListener("change",e=>{pdfFile=e.target.files[0]||null;$("readPdfBtn").disabled=!pdfFile;if(pdfFile){$("importStatus").className="status";$("importStatus").innerHTML=`<b>PDF dipilih:</b> ${esc(pdfFile.name)}<div class="small">Klik “BACA & PISAHKAN PDF”.</div>`}});
-$("designImageFiles").addEventListener("change",e=>{designImageFiles=[...e.target.files];$("importImagesBtn").disabled=!designImageFiles.length;if(designImageFiles.length){$("importStatus").className="status";$("importStatus").innerHTML=`<b>${designImageFiles.length} gambar desain dipilih.</b><div class="small">Klik “IMPORT GAMBAR DESAIN”.</div>`}});
+$("universalDesignFiles").addEventListener("change",e=>{universalDesignFiles=[...e.target.files];$("importUniversalBtn").disabled=!universalDesignFiles.length;if(universalDesignFiles.length){$("importStatus").className="status";$("importStatus").innerHTML=`<b>${universalDesignFiles.length} file desain dipilih.</b><div class="small">PDF dipisahkan per halaman; JPG/PNG/WEBP/SVG masuk sebagai desain satuan.</div>`}});
 $("imageFiles").addEventListener("change",e=>{[...e.target.files].forEach(addOverlayImage);e.target.value=""});
 $("qualityMode").addEventListener("change",()=>{$("manualPpi").disabled=$("qualityMode").value!=="manual";refreshSelected()});
 $("overlaySelect").addEventListener("change",()=>{activeOverlayId=$("overlaySelect").value||null;invalidateProcessed();renderOverlayGallery();refreshSelected();renderAllPreviews()});
@@ -562,6 +559,25 @@ function rotateOverlay(delta){
 }
 function setRotation(a){$("overlayRot").value=a;syncEditorBox();invalidateProcessed();updateOverlayInfo()}
 window.addEventListener("resize",()=>{if(!$("logoEditorModal").classList.contains("hidden"))renderLogoEditor()});
+
+async function importUniversalDesigns(){
+ const files=universalDesignFiles||[];if(!files.length)return;
+ $("importUniversalBtn").disabled=true;setProgress(5);
+ const pdfs=files.filter(f=>f.type==='application/pdf'||/\.pdf$/i.test(f.name));
+ const imgs=files.filter(f=>f.type.startsWith('image/')||/\.(jpg|jpeg|png|webp|svg)$/i.test(f.name));
+ for(let i=0;i<imgs.length;i++){
+  const file=imgs[i];
+  try{const url=URL.createObjectURL(file);const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});
+   const d={id:"img-design-"+crypto.randomUUID(),name:file.name,img,w:img.naturalWidth,h:img.naturalHeight,source:"Gambar Desain",processed:null,upscaled:null};
+   designs.push(d);selectedDesignIds.add(d.id);URL.revokeObjectURL(url);
+  }catch(e){console.error('Import gambar gagal',file.name,e)}
+  setProgress(10+Math.round(((i+1)/Math.max(1,imgs.length))*45));
+ }
+ for(let i=0;i<pdfs.length;i++){
+  pdfFile=pdfs[i];await readPdf();setProgress(55+Math.round(((i+1)/Math.max(1,pdfs.length))*40));
+ }
+ universalDesignFiles=[];$("universalDesignFiles").value="";updateUI();if(designs.length)selectDesign(designs[0].id);setProgress(100);$("importUniversalBtn").disabled=false;
+}
 
 async function importDesignImages(){
  const files=designImageFiles||[];if(!files.length)return;
@@ -984,7 +1000,7 @@ async function buildZip(){
 }
 async function downloadZip(){if(!zipBlob)await buildZip();if(!zipBlob)return;const a=document.createElement("a");a.href=URL.createObjectURL(zipBlob);a.download="PrintDesign_READY_TO_PRINT.zip";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function downloadSelected(){const d=designs.find(x=>x.id===selectedId);if(!d?.processedCanvas)return;const a=document.createElement("a");a.href=d.processedCanvas.toDataURL("image/png",1);a.download=(d.name.replace(/[^\w\-]+/g,"_")||"design")+"_READY.png";a.click()}
-function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("pdfFile").value="";$("designImageFiles").value="";$("imageFiles").value="";designImageFiles=[];$("readPdfBtn").disabled=true;$("zipBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
+function clearAll(){pdfFile=null;designs=[];extras=[];selectedId=null;zipBlob=null;overlays=[];activeOverlayId=null;selectedDesignIds.clear();$("universalDesignFiles").value="";$("imageFiles").value="";universalDesignFiles=[];designImageFiles=[];$("importUniversalBtn").disabled=true;$("zipBtn").disabled=true;$("importStatus").className="status";$("importStatus").innerHTML='<div class="small">Import PDF desain dan/atau gambar/logo overlay tambahan.</div>';renderOverlayGallery();refreshOverlaySelect();updateUI();drawEmpty();$("overlayHandle").classList.add("hidden")}
 
 // ===================== PROJECT HISTORY =====================
 function getHistory(){try{return JSON.parse(localStorage.getItem("pdai_history")||"[]")}catch(e){return[]}}
